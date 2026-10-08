@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   title: "Academia de Idiomas San Pedro",
   description:
     "Aprende idiomas con los mejores profesores. Regístrate y descubre tu nivel con nuestro test online gratuito.",
+  icons: {
+    icon: "/assets/logo.png",
+    shortcut: "/assets/logo.png",
+    apple: "/assets/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
