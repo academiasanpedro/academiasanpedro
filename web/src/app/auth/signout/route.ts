@@ -1,12 +1,10 @@
+// Route Handler — Cierre de sesión (solo POST para evitar cierres por enlaces o prefetch)
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   const supabase = await createClient();
-
-  // Cerrar sesión
   await supabase.auth.signOut();
-
-  // Redirigir al home principal
-  return NextResponse.redirect(new URL("/", request.url));
+  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
 }

@@ -1,31 +1,20 @@
-# Academia San Pedro - AI Context
+# Academia San Pedro — Contexto IA
 
-**Stack**: Next.js 16 (App Router), Tailwind CSS v4, Supabase (RLS required).
-**UI/UX**: Ultra-modern SaaS aesthetic (glassmorphism, gradients, `font-black` typography, micro-animations).
+Web de captación y gestión de alumnos de una academia de idiomas (Huelva). App en `web/`: Next.js 16 (App Router, React 19), Tailwind v4, Supabase (Auth + Postgres con RLS), Zod + React Hook Form, Nodemailer (Gmail). Toda la UI en español.
 
-## 🗺️ Vault Index (Single Source of Truth)
-To save tokens and avoid hallucinations, **do not guess** requirements, database schemas, or colors. Use your file reading tools (`view_file` or equivalent) to read the specific document from the list below that matches your current task.
+## Reglas críticas
+- Next 16: `src/proxy.ts` (no `middleware`); `params`/`searchParams` son `Promise`. Ante dudas de API lee `web/node_modules/next/dist/docs/`.
+- Escrituras solo vía Server Actions (`src/app/actions/`): Zod + `requireUser()`/`requireAdmin()` (`src/lib/auth.ts`). Nunca confiar en ids/emails del cliente.
+- Ficheros `"use server"` solo exportan actions; emails con `src/lib/email.ts` (server-only) y `escapeHtml()`.
+- Colores y sombras solo con tokens de `globals.css`; reutiliza `src/components/ui` antes de crear estilos nuevos.
+- Copy, cifras y testimonios solo de `02_Business.md`. No inventar.
+- Si cambias rutas, tablas, flujos o tokens, actualiza el doc del vault afectado.
 
-### 🎨 Core & UI
-- `AcademiaSanPedro/00_Meta/00_Project_Rules.md` -> Reglas del proyecto
-- `AcademiaSanPedro/00_Meta/01_Tech_Stack.md` -> Stack y dependencias
-- `AcademiaSanPedro/00_Meta/02_UI_UX_Guidelines.md` -> Colores HEX, diseño y tipografía
-
-### 🏢 Business & Flows
-- `AcademiaSanPedro/01_Requirements/01.1_Business_Profile.md` -> Copy, idiomas y lógica de negocio (Lee esto para textos de UI)
-- `AcademiaSanPedro/01_Requirements/01_User_Flow_Login.md` -> Flujo de Autenticación
-- `AcademiaSanPedro/01_Requirements/02_User_Flow_Level_Test.md` -> Flujo del Test de Nivel Online
-- `AcademiaSanPedro/01_Requirements/03_User_Flow_Questionnaire.md` -> Flujo de Cuestionario Inicial
-
-### ⚙️ Database & Routing
-- `AcademiaSanPedro/02_Architecture/schema.sql` -> Esquema SQL exacto (Tablas, Triggers, RLS)
-- `AcademiaSanPedro/02_Architecture/00_Database_Schema.md` -> Relaciones y lógica de BBDD
-- `AcademiaSanPedro/02_Architecture/01_API_Endpoints.md` -> Definición de Server Actions
-- `AcademiaSanPedro/02_Architecture/02_Frontend_Routes.md` -> Mapa de rutas de Next.js
-
-## ⚡ Agent Instructions
-1. **Identify**: Look at the user's prompt.
-2. **Fetch Context**: Pick 1-2 files from the index above that are strictly necessary and read them.
-3. **Execute**: Write code using the exact Hex colors, database table names, and routing structure defined in the Vault.
-
-*(For detailed agent guidelines, read `AcademiaSanPedro/AGENTS.md`)*
+## Vault `AcademiaSanPedro/` (lee solo lo necesario)
+- `00_Rules.md` — estructura, convenciones, comandos, env
+- `01_Design.md` — tokens, primitivas UI, patrones, a11y
+- `02_Business.md` — copy, oferta, contacto, datos verificados
+- `03_Flows.md` — flujos alumno/admin y reglas de negocio
+- `04_Routes.md` — rutas, layouts, proxy, server actions
+- `05_Database.md` — tablas, RLS, JSON (DDL: `supabase/`)
+- `06_Backlog.md` — pendientes, límites conocidos, decisiones

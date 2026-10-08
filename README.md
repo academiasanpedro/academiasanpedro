@@ -1,117 +1,69 @@
 # 🎓 Academia de Idiomas San Pedro — Plataforma Web
 
-Plataforma web integral para la **Academia de Idiomas San Pedro**, diseñada con una arquitectura modular y asistida por IA para maximizar la calidad del software, optimizar ventanas de contexto y facilitar el desarrollo iterativo.
+Web de captación y gestión de alumnos de la Academia de Idiomas San Pedro (Huelva): landing comercial, registro, cuestionario inicial, test de nivel online evaluado por profesores y panel de administración (CRM, tests, mailing y textos legales).
 
----
+## 🛠️ Stack
 
-## 📑 Tabla de Contenidos
-1. [Visión General](#-visión-general)
-2. [Stack Tecnológico](#-stack-tecnológico)
-3. [Estructura del Proyecto](#-estructura-del-proyecto)
-4. [El Vault de Obsidian (`AcademiaSanPedro/`)](#-el-vault-de-obsidian-academiasanpedro)
-5. [Puesta en Marcha Local](#-puesta-en-marcha-local)
-6. [Autenticación y Supabase](#-autenticación-y-supabase)
-7. [Próximos Pasos (Hoja de Ruta)](#-próximos-pasos-hoja-de-ruta)
+- **Next.js 16** (App Router, Server Actions, React 19) + **TypeScript** estricto
+- **Tailwind CSS v4** con tokens de diseño en `web/src/app/globals.css`
+- **Supabase**: Auth (email + Google), Postgres con RLS
+- **React Hook Form + Zod** (mismos esquemas en cliente y servidor)
+- **Nodemailer (Gmail)** para emails · **Playwright** para tests e2e
+- Despliegue en **Netlify** (`netlify.toml`)
 
----
-
-## 🌟 Visión General
-
-La plataforma está orientada a la captación y gestión formativa de alumnos, ofreciendo:
-- **Portal público**: Presentación de cursos, metodología y contacto.
-- **Autenticación segura**: Registro y login con Supabase Auth (Email + Google OAuth).
-- **Cuestionario de Onboarding**: Captación de objetivos, disponibilidad y nivel estimado.
-- **Test de Nivel Online**: Evaluación asíncrona cuyos resultados son revisados por el equipo docente.
-- **Área privada (Dashboard)**: Gestión del progreso y seguimiento formativo del alumno.
-
----
-
-## 🛠️ Stack Tecnológico
-
-- **Frontend & Framework**: [Next.js](https://nextjs.org/) (App Router, Server Actions, React 19).
-- **Tipado**: [TypeScript](https://www.typescriptlang.org/) (Strict Mode).
-- **Estilos**: [Tailwind CSS](https://tailwindcss.com/) v4 con tokens de diseño centralizados.
-- **Formularios & Validación**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/).
-- **Backend & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, Auth con SSR vía `@supabase/ssr`, RLS).
-- **Despliegue objetivo**: [Vercel](https://vercel.com/).
-
----
-
-## 📂 Estructura del Proyecto
+## 📂 Estructura
 
 ```text
 academiasanpedro/
-├── .gitignore                   # Protección de variables de entorno y artefactos
-├── README.md                    # Documentación general del proyecto
-├── netlify.toml                 # Configuración de despliegue en Netlify
-│
-└── web/                         # 💻 Aplicación Next.js
-    ├── src/
-    │   ├── app/
-    │   │   ├── (auth)/          # Rutas de autenticación (Login, Registro con split layout)
-    │   │   ├── auth/callback/   # Handler para redirección OAuth
-    │   │   ├── dashboard/       # Área privada protegida para alumnos
-    │   │   ├── globals.css      # Tokens de diseño y fuentes
-    │   │   └── layout.tsx       # Layout raíz con configuración SEO y tipografía
-    │   ├── components/
-    │   │   ├── features/        # Componentes de negocio (LoginForm, RegistroForm)
-    │   │   └── ui/              # Componentes visuales reutilizables (Button, InputField, etc.)
-    │   ├── lib/
-    │   │   ├── supabase/        # Clientes Supabase para Client y Server
-    │   │   └── validators/      # Esquemas de validación Zod
-    │   └── middleware.ts        # Protección de rutas protegidas y redirecciones
-    ├── package.json
-    └── tsconfig.json
+├── CLAUDE.md / GEMINI.md / .cursorrules   # Contexto para agentes IA (idénticos)
+├── AcademiaSanPedro/                      # Vault de Obsidian (local, no se sube a git)
+├── supabase/
+│   ├── schema.sql                         # Esquema base
+│   └── migrations/                        # Cambios posteriores, en orden
+└── web/                                   # Aplicación Next.js
+    ├── src/app/
+    │   ├── (site)/        # Landing y páginas legales (header + footer)
+    │   ├── (auth)/auth/   # Login, registro, verificación y recuperación de contraseña
+    │   ├── auth/          # Callback OAuth/email y cierre de sesión (POST)
+    │   ├── dashboard/     # Área del alumno: panel, cuestionario, test de nivel, perfil
+    │   ├── admin/         # Panel admin: resumen, tests, CRM, mailing, legal, configuración
+    │   └── actions/       # Server Actions (única vía de escritura)
+    ├── src/components/    # ui (primitivas) · features · landing · layout · admin · dashboard
+    ├── src/lib/           # auth, email, constantes de negocio, validadores Zod, Supabase
+    ├── src/proxy.ts       # Protección de /dashboard y /admin
+    └── tests/             # Tests e2e (Playwright)
 ```
 
----
+## 🚀 Puesta en marcha
 
-## 🚀 Puesta en Marcha Local
+1. **Base de datos** (Supabase → SQL Editor): ejecuta `supabase/schema.sql` si es un proyecto nuevo y, después, cada fichero de `supabase/migrations/` en orden. En un proyecto existente basta con las migraciones pendientes.
+2. **Auth** (Supabase → Authentication → URL Configuration): añade `http://localhost:3000/auth/callback` y `https://<tu-dominio>/auth/callback` a *Redirect URLs*.
+3. **Variables de entorno**:
+   ```bash
+   cd web
+   cp .env.example .env.local   # y rellena los valores
+   ```
+4. **Arrancar**:
+   ```bash
+   npm install
+   npm run dev        # http://localhost:3000
+   ```
+5. **Primer administrador**: regístrate en la web y ejecuta en el SQL Editor  
+   `update public.profiles set role = 'admin' where email = 'tu@email.com';`
 
-### 1. Prerrequisitos
-- Node.js (v18.18+ o v20+)
-- Gestor de paquetes npm / pnpm
-
-### 2. Configuración de Variables de Entorno
-Crea el archivo `.env.local` dentro de la carpeta `web/` tomando como referencia `.env.example`:
+## ✅ Calidad
 
 ```bash
-cd web
-cp .env.example .env.local
+npm run lint                 # ESLint (incluye reglas del React Compiler)
+npm run build                # Build de producción + type check
+npx playwright test          # Tests e2e (arranca el servidor de desarrollo)
 ```
 
-Configura tus credenciales de Supabase en `web/.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
-```
+## 🔐 Seguridad
 
-### 3. Instalación e Inicio del Servidor
-```bash
-cd web
-npm install
-npm run dev
-```
+- Toda escritura pasa por Server Actions con validación Zod y comprobación de sesión/rol en servidor.
+- RLS en todas las tablas; triggers impiden que un alumno cambie su rol o fuerce estados (`supabase/migrations/001_hardening.sql`).
+- Las respuestas correctas del test nunca se envían al navegador; la corrección se hace en el servidor.
+- Mailing solo a usuarios con consentimiento, en copia oculta y por lotes.
 
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
-- Login: `http://localhost:3000/auth/login`
-- Registro: `http://localhost:3000/auth/registro`
-- Dashboard (protegido): `http://localhost:3000/dashboard`
-
----
-
-## 🔐 Autenticación y Supabase
-
-- **Confirmación de Email**: Supabase activa por defecto la confirmación por correo al registrarse. El formulario informa al usuario que revise su bandeja de entrada si esto está activado.
-- **Modo Desarrollo rápido**: Puedes deshabilitar temporalmente la confirmación en *Supabase Dashboard → Authentication → Providers → Email → Confirm email (OFF)* para acceder directamente al crear una cuenta.
-- **Mapeo de Rutas y Middleware**: `middleware.ts` intercepta peticiones a `/dashboard` sin sesión para redirigir a `/auth/login`, y redirige usuarios autenticados fuera de las pantallas de login.
-
----
-
-## 📌 Próximos Pasos (Hoja de Ruta)
-
-- [ ] **Identidad visual definitiva**: Ajuste de paleta cromática, logo corporativo e iconografía.
-- [ ] **Plantillas de Email**: Configuración del correo de confirmación y bienvenida en Supabase.
-- [ ] **Cuestionario Post-Registro**: Implementación interactiva en `/dashboard/cuestionario`.
-- [ ] **Test de Nivel Online**: Flujo de evaluación en `/dashboard/level-test`.
-- [ ] **Páginas públicas**: Maquetación de la Landing page, catálogo de idiomas y formulario de contacto.
+Documentación funcional y técnica detallada: vault `AcademiaSanPedro/` (ver índice en `CLAUDE.md`).

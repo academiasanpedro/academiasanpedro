@@ -1,41 +1,46 @@
-import Link from "next/link";
-import { Mail, ArrowRight } from "lucide-react";
+// Página tras el registro cuando Supabase exige confirmar el email — Ruta: /auth/verify-email?email=
 
-export default function VerifyEmailPage({
-  searchParams,
-}: {
-  searchParams: { email?: string };
-}) {
-  const email = searchParams.email || "tu correo";
+import type { Metadata } from "next";
+import { ArrowRight, MailCheck } from "lucide-react";
+import { ButtonLink } from "@/components/ui/Button";
+
+export const metadata: Metadata = {
+  title: "Verifica tu email",
+  robots: { index: false },
+};
+
+export default async function VerifyEmailPage({ searchParams }: PageProps<"/auth/verify-email">) {
+  const { email } = await searchParams;
+  const address = typeof email === "string" && email ? email : null;
 
   return (
     <div className="text-center">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
-        <Mail size={40} />
+      <div className="mx-auto mb-6 grid size-20 place-items-center rounded-3xl bg-primary-50 text-primary animate-scale-in">
+        <MailCheck size={38} aria-hidden="true" />
       </div>
-      
-      <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-4">
-        Verifica tu Email
-      </h1>
-      
-      <p className="text-neutral-500 mb-8 font-medium text-lg max-w-md mx-auto">
-        Hemos enviado un correo de confirmación a <strong className="text-neutral-900">{email}</strong>. 
-        <br/><br/>
-        Haz clic en el enlace que te hemos enviado para activar tu cuenta y acceder automáticamente a tu panel de alumno.
+      <h1 className="text-3xl font-black tracking-tight text-neutral-900">Revisa tu correo</h1>
+      <p className="mx-auto mt-4 max-w-sm text-base font-medium text-neutral-500">
+        Hemos enviado un enlace de confirmación a{" "}
+        {address ? <strong className="break-all text-neutral-900">{address}</strong> : "tu email"}. Ábrelo para activar tu
+        cuenta y continuar con el cuestionario.
       </p>
 
-      <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-6 max-w-sm mx-auto mb-8">
-        <p className="text-sm text-neutral-500">
-          ¿No lo encuentras? Revisa tu carpeta de Spam o Correo no deseado.
-        </p>
-      </div>
+      <ol className="mx-auto mt-8 max-w-sm space-y-3 rounded-3xl bg-neutral-50 p-6 text-left text-sm text-neutral-600">
+        <li>
+          <strong className="text-neutral-900">1.</strong> Abre el email de “Academia San Pedro”.
+        </li>
+        <li>
+          <strong className="text-neutral-900">2.</strong> Pulsa el enlace desde este mismo navegador.
+        </li>
+        <li>
+          <strong className="text-neutral-900">3.</strong> ¿No llega? Revisa spam o promociones.
+        </li>
+      </ol>
 
-      <Link
-        href="/auth/login"
-        className="inline-flex items-center gap-2 font-bold text-primary hover:text-primary-dark transition-colors"
-      >
-        Volver al inicio de sesión <ArrowRight size={16} />
-      </Link>
+      <ButtonLink href="/auth/login" variant="outline" className="mt-8">
+        Ya lo he confirmado, iniciar sesión
+        <ArrowRight size={16} aria-hidden="true" />
+      </ButtonLink>
     </div>
   );
 }

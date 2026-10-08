@@ -1,18 +1,11 @@
-// Componente UI — Divisor con texto (para separar "o continuar con Google")
-// Ref: AcademiaSanPedro/00_Meta/02_UI_UX_Guidelines.md → Divider con texto
+// Divisor con texto centrado (p. ej. "o continúa con")
 
-interface DividerWithTextProps {
-  text?: string;
-}
-
-export default function DividerWithText({
-  text = "o",
-}: DividerWithTextProps) {
+export default function DividerWithText({ text = "o" }: { text?: string }) {
   return (
-    <div className="relative flex items-center py-2">
-      <div className="flex-grow border-t border-neutral-100" />
-      <span className="mx-4 shrink-0 text-sm text-neutral-700">{text}</span>
-      <div className="flex-grow border-t border-neutral-100" />
+    <div className="flex items-center gap-4 py-1" role="separator">
+      <div className="h-px flex-1 bg-neutral-200" />
+      <span className="shrink-0 text-xs font-semibold tracking-wide text-neutral-400 uppercase">{text}</span>
+      <div className="h-px flex-1 bg-neutral-200" />
     </div>
   );
 }
