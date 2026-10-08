@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* ============================================
+   Design Tokens — Academia de Idiomas San Pedro
+   Basado en: AcademiaSanPedro/00_Meta/02_UI_UX_Guidelines.md
+   ============================================ */
+
+@theme inline {
+  --color-primary: #243B78;
+  --color-primary-light: #4A65A9;
+  --color-primary-dark: #121F42;
+  --color-secondary: #C83232;
+  --color-secondary-dark: #A52828;
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #F1F5F9;
+  --color-neutral-200: #E2E8F0;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #64748B;
+  --color-neutral-700: #334155;
+  --color-neutral-900: #0F172A;
+  --color-white: #FFFFFF;
+  --color-success: #16A34A;
+  --color-error: #DC2626;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-900);
+  font-family: var(--font-sans);
+}
+
+/* Focus ring global para accesibilidad */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
