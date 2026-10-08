@@ -26,7 +26,7 @@ const ITEMS = [
   {
     icon: BookOpen,
     title: "Material físico y online",
-    text: "Recursos actualizados para practicar gramática, vocabulario y pronunciación.",
+    text: "Material didáctico y recursos online gratuitos para practicar gramática, vocabulario y pronunciación.",
   },
   {
     icon: MonitorSmartphone,
@@ -37,7 +37,7 @@ const ITEMS = [
   {
     icon: Snowflake,
     title: "Aulas equipadas",
-    text: "Aulas climatizadas y equipadas con tecnología, en la Plaza San Pedro de Huelva.",
+    text: "Aulas climatizadas y equipadas con alta tecnología, en la Plaza San Pedro de Huelva.",
   },
 ];
 

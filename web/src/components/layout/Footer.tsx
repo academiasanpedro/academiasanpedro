@@ -2,7 +2,8 @@
 // Ref: AcademiaSanPedro/02_Business.md → Identidad
 
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import Facebook from "@/components/ui/FacebookIcon";
 import Instagram from "@/components/ui/InstagramIcon";
 import Logo from "@/components/ui/Logo";
 import { CONTACT, LEGAL_PAGES } from "@/lib/constants";
@@ -13,6 +14,11 @@ const NAV = [
   { label: "Exámenes Cambridge", href: "/#examenes" },
   { label: "Preguntas frecuentes", href: "/#faq" },
   { label: "Acceso alumnos", href: "/auth/login" },
+];
+
+const SOCIAL = [
+  { icon: Instagram, label: CONTACT.instagramHandle, href: CONTACT.instagram },
+  { icon: Facebook, label: "Facebook", href: CONTACT.facebook },
 ];
 
 const linkClass = "transition-colors hover:text-white";
@@ -29,15 +35,20 @@ export default function Footer() {
             <p className="mt-6 max-w-xs text-sm leading-relaxed">
               Centro Preparador Oficial Cambridge en Huelva. Inglés, francés, alemán e italiano para todas las edades.
             </p>
-            <a
-              href={CONTACT.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
-            >
-              <Instagram size={16} aria-hidden="true" />
-              {CONTACT.instagramHandle}
-            </a>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {SOCIAL.map(({ icon: Icon, label, href }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  {label}
+                </a>
+              ))}
+            </div>
           </div>
 
           <nav aria-label="Pie de página">
@@ -73,10 +84,24 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href={CONTACT.landlineHref} className={`flex items-center gap-3 ${linkClass}`}>
+                  <Phone size={18} className="shrink-0 text-secondary" aria-hidden="true" />
+                  {CONTACT.landline}
+                </a>
+              </li>
+              <li>
                 <a href={`mailto:${CONTACT.email}`} className={`flex items-center gap-3 break-all ${linkClass}`}>
                   <Mail size={18} className="shrink-0 text-secondary" aria-hidden="true" />
                   {CONTACT.email}
                 </a>
+              </li>
+              <li className="flex items-start gap-3">
+                <Clock size={18} className="mt-0.5 shrink-0 text-secondary" aria-hidden="true" />
+                <span>
+                  Secretaría
+                  <br />
+                  {CONTACT.hours}
+                </span>
               </li>
             </ul>
           </div>

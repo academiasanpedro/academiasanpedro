@@ -28,7 +28,7 @@ export default function StudentShell({ name, email, isAdmin, children }: Student
 
       <header className="sticky top-0 z-40 border-b border-neutral-200/70 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-4 px-5 lg:px-8">
-          <Logo href="/dashboard" subtitle="Área de alumnos" />
+          <Logo subtitle="Área de alumnos" />
           <nav aria-label="Área de alumnos" className="hidden items-center gap-1 md:flex">
             {NAV.map(({ href, label, icon: Icon, exact }) => (
               <NavLink

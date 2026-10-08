@@ -86,7 +86,7 @@ export default function AdminShell({ name, email, pendingCount, notifications, c
       >
         <div className="pointer-events-none absolute -top-20 -right-20 size-60 rounded-full bg-secondary/20 blur-3xl" />
         <div className="relative flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <Logo tone="dark" href="/admin" subtitle="Panel admin" />
+          <Logo tone="dark" subtitle="Panel admin" />
           <button
             type="button"
             className="grid size-9 place-items-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white lg:hidden"

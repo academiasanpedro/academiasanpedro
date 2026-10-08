@@ -9,6 +9,7 @@ import {
   Clock3,
   GraduationCap,
   Mail,
+  MessageCircle,
   Phone,
   Sparkles,
   Target,
@@ -220,12 +221,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       <Card variant="muted" className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div>
           <h2 className="text-lg font-black text-neutral-900">¿Tienes dudas?</h2>
-          <p className="mt-1 text-sm text-neutral-500">Estamos en {CONTACT.address}, Huelva. Escríbenos o llámanos.</p>
+          <p className="mt-1 text-sm text-neutral-500">Estamos en {CONTACT.address}, Huelva. Secretaría: {CONTACT.hours.toLowerCase()}.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <a href={CONTACT.phoneHref} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition hover:text-primary">
             <Phone size={16} aria-hidden="true" />
             {CONTACT.phone}
+          </a>
+          <a href={CONTACT.whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition hover:text-primary">
+            <MessageCircle size={16} aria-hidden="true" />
+            WhatsApp
           </a>
           <a href={`mailto:${CONTACT.email}`} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition hover:text-primary">
             <Mail size={16} aria-hidden="true" />

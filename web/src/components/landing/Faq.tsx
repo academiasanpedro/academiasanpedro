@@ -19,15 +19,23 @@ export const FAQS = [
   },
   {
     q: "¿Preparáis exámenes oficiales?",
-    a: "Sí. Somos Centro Preparador Oficial Cambridge (B1 Preliminary, B2 First, C1 Advanced y C2 Proficiency) y preparamos DELF y DALF de francés, además de otros certificados oficiales.",
+    a: "Sí. Somos Centro Preparador Oficial Cambridge (B1 Preliminary, B2 First, C1 Advanced y C2 Proficiency, y también Business Preliminary) y preparamos DELF y DALF de francés, además de otros certificados oficiales.",
   },
   {
     q: "¿Cómo se forman los grupos?",
     a: "A partir de la prueba de nivel. Así cada grupo es homogéneo y todos avanzan al mismo ritmo, con seguimiento individual, tutorías y refuerzos cuando hace falta.",
   },
   {
+    q: "¿Tenéis descuentos o convenios?",
+    a: "Sí. Tenemos convenios con colegios profesionales de Huelva, como el Colegio de Médicos y el Colegio de Ingenieros Técnicos Industriales (COITI), con descuento para colegiados y sus familiares directos. Pregúntanos por las condiciones.",
+  },
+  {
     q: "¿Dónde estáis y cuánto cuesta?",
-    a: `Estamos en ${CONTACT.address}, ${CONTACT.postalCode} ${CONTACT.city}. El precio depende del curso y la modalidad: escríbenos o llámanos al ${CONTACT.phone} y te informamos sin compromiso.`,
+    a: `Estamos en ${CONTACT.address}, ${CONTACT.postalCode} ${CONTACT.city}. El precio depende del curso y la modalidad: llámanos al ${CONTACT.phone} o al ${CONTACT.landline}, o escríbenos por email o WhatsApp, y te informamos sin compromiso.`,
+  },
+  {
+    q: "¿Cuál es vuestro horario de atención?",
+    a: `Secretaría: ${CONTACT.hours}, durante el curso escolar. Fuera de ese horario puedes escribirnos por email o WhatsApp y te respondemos.`,
   },
 ];
 

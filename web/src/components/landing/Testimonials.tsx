@@ -3,8 +3,10 @@
 
 import { Quote, Star } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { cn } from "@/lib/utils";
 
 const TESTIMONIALS = [
+  { text: "Muy buena academia, preparan muy bien para los exámenes oficiales de Cambridge.", author: "Reseña en Google", tag: "Exámenes Cambridge" },
   { text: "Conseguí mi certificado de B1 de inglés en un curso intensivo este verano.", author: "Alumno/a", tag: "Cambridge B1 · Intensivo" },
   { text: "Llevo 3 años en esta academia y he conseguido dos títulos: B1 y B2.", author: "Alumna", tag: "Cambridge B1 y B2" },
   { text: "Academia dinámica y profesional.", author: "Familia de alumna", tag: "Grupo infantil" },
@@ -30,20 +32,23 @@ export default function Testimonials() {
                   <Star key={i} size={18} fill="currentColor" aria-hidden="true" />
                 ))}
               </div>
-              <p className="mt-1 text-xs font-semibold text-neutral-500">6 reseñas públicas</p>
+              <p className="mt-1 text-xs font-semibold text-neutral-500">6 reseñas en Google</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-6">
           {TESTIMONIALS.map((item, index) => (
             <figure
               key={item.text}
-              className={
+              className={cn(
+                "reveal flex flex-col justify-between rounded-3xl p-7",
+                index < 3 ? "lg:col-span-2" : "lg:col-span-3",
+                index === TESTIMONIALS.length - 1 && "md:col-span-2 lg:col-span-3",
                 index === 1
-                  ? "reveal flex flex-col justify-between rounded-3xl bg-primary p-7 text-white shadow-glow-primary lg:-translate-y-4"
-                  : "reveal flex flex-col justify-between rounded-3xl border border-neutral-200/70 bg-white p-7 shadow-soft"
-              }
+                  ? "bg-primary text-white shadow-glow-primary lg:-translate-y-4"
+                  : "border border-neutral-200/70 bg-white shadow-soft"
+              )}
             >
               <div>
                 <Quote size={28} className={index === 1 ? "text-secondary-soft" : "text-secondary"} aria-hidden="true" />
