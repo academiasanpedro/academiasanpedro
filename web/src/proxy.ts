@@ -5,6 +5,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function proxy(request: NextRequest) {
+  // Si Supabase no reconoce la URL de retorno, vuelve a la Site URL ("/") con ?code o ?error:
+  // se reenvía al callback para completar el login o mostrar un error comprensible.
+  if (request.nextUrl.pathname === "/") {
+    const callbackUrl = new URL(`/auth/callback${request.nextUrl.search}`, request.url);
+    return NextResponse.redirect(callbackUrl);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -63,5 +70,13 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/auth/login", "/auth/registro"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/auth/login",
+    "/auth/registro",
+    // Solo cuando "/" llega con parámetros de Supabase (la landing sigue siendo estática)
+    { source: "/", has: [{ type: "query", key: "code" }] },
+    { source: "/", has: [{ type: "query", key: "error_code" }] },
+  ],
 };

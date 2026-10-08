@@ -9,7 +9,7 @@ Web de captación y gestión de alumnos de la Academia de Idiomas San Pedro (Hue
 - **Supabase**: Auth (email + Google), Postgres con RLS
 - **React Hook Form + Zod** (mismos esquemas en cliente y servidor)
 - **Nodemailer (Gmail)** para emails · **Playwright** para tests e2e
-- Despliegue en **Netlify** (`netlify.toml`)
+- Despliegue en **Vercel** (Root Directory: `web`)
 
 ## 📂 Estructura
 
@@ -37,7 +37,10 @@ academiasanpedro/
 ## 🚀 Puesta en marcha
 
 1. **Base de datos** (Supabase → SQL Editor): ejecuta `supabase/schema.sql` si es un proyecto nuevo y, después, cada fichero de `supabase/migrations/` en orden. En un proyecto existente basta con las migraciones pendientes.
-2. **Auth** (Supabase → Authentication → URL Configuration): añade `http://localhost:3000/auth/callback` y `https://<tu-dominio>/auth/callback` a *Redirect URLs*.
+2. **Auth** (Supabase → Authentication → URL Configuration):
+   - *Site URL*: el dominio de producción (`https://<tu-dominio>`).
+   - *Redirect URLs*: `http://localhost:3000/auth/callback` y `https://<tu-dominio>/auth/callback` (exactas; la app no añade parámetros). Para las *previews* de Vercel: `https://*-<tu-equipo>.vercel.app/auth/callback`.
+   - Google Cloud Console → OAuth → *Authorized redirect URIs*: `https://<project-ref>.supabase.co/auth/v1/callback`.
 3. **Variables de entorno**:
    ```bash
    cd web
@@ -50,6 +53,12 @@ academiasanpedro/
    ```
 5. **Primer administrador**: regístrate en la web y ejecuta en el SQL Editor  
    `update public.profiles set role = 'admin' where email = 'tu@email.com';`
+
+## ▲ Despliegue (Vercel)
+
+1. Importa el repositorio en Vercel y en *Settings → Build and Deployment* pon **Root Directory = `web`** (Next.js se detecta solo).
+2. En *Settings → Environment Variables* añade las mismas variables que `web/.env.example` (`NEXT_PUBLIC_SITE_URL` es opcional: Vercel aporta el dominio).
+3. Cada push a `main` despliega producción; cada rama/PR genera una *preview*.
 
 ## ✅ Calidad
 

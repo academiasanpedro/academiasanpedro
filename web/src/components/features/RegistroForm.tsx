@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registroSchema, type RegistroFormData } from "@/lib/validators/auth";
+import { authCallbackUrl, rememberNextPath } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/client";
 import { CheckboxField, InputField } from "@/components/ui/Form";
 import Alert from "@/components/ui/Alert";
@@ -34,12 +35,13 @@ export default function RegistroForm() {
   const onSubmit = async (data: RegistroFormData) => {
     setServerError(null);
 
+    rememberNextPath(AFTER_SIGNUP);
     const { data: authData, error } = await createClient().auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: { full_name: data.full_name, marketing_consent: data.marketing_consent },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${AFTER_SIGNUP}`,
+        emailRedirectTo: authCallbackUrl(),
       },
     });
 

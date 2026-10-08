@@ -17,6 +17,12 @@ test.describe("Protección de rutas (proxy)", () => {
     expect(questionnaireRedirect.headers().location).toContain("/dashboard/questionnaire");
   });
 
+  test("un retorno de Supabase que cae en la Site URL se reenvía al callback", async ({ page }) => {
+    await page.goto("/?error=invalid_request&error_code=flow_state_already_used&error_description=State+has+already+been+used");
+    await expect(page).toHaveURL(/\/auth\/login\?error=oauth/);
+    await expect(page.getByText("No se pudo completar el inicio de sesión con Google")).toBeVisible();
+  });
+
   test("cerrar sesión solo acepta POST", async ({ request }) => {
     expect((await request.get("/auth/signout")).status()).toBe(405);
   });

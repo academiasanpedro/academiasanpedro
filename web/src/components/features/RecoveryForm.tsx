@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MailCheck } from "lucide-react";
 import { recoverySchema, type RecoveryFormData } from "@/lib/validators/auth";
+import { authCallbackUrl, rememberNextPath } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/client";
 import { InputField } from "@/components/ui/Form";
 import Alert from "@/components/ui/Alert";
@@ -25,8 +26,9 @@ export default function RecoveryForm() {
 
   const onSubmit = async ({ email }: RecoveryFormData) => {
     setServerError(null);
+    rememberNextPath("/auth/nueva-contrasena");
     const { error } = await createClient().auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/nueva-contrasena`,
+      redirectTo: authCallbackUrl(),
     });
 
     // Errores de límite de envíos sí se muestran; el resto se trata igual para no revelar si el email existe

@@ -3,8 +3,15 @@
 
 export const SITE_NAME = "Academia de Idiomas San Pedro";
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? "http://localhost:3000";
+/** URL pública: NEXT_PUBLIC_SITE_URL → dominio de Vercel (producción o preview) → localhost. */
+function resolveSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const vercelHost =
+    process.env.VERCEL_ENV === "production" ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL;
+  return vercelHost ? `https://${vercelHost}` : "http://localhost:3000";
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const CONTACT = {
   address: "Plaza San Pedro nº 2",
