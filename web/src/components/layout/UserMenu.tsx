@@ -1,60 +1,94 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { User, Settings, LogOut } from "lucide-react";
+// Menú de usuario (avatar con iniciales): perfil, volver a la web y cerrar sesión (POST).
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Globe, LogOut, Settings, Shield } from "lucide-react";
+import { cn, getInitials } from "@/lib/utils";
 
-export default function ProfileDropdown({ userName, userInitials, isAdmin }: { userName: string, userInitials: string, isAdmin?: boolean }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+interface UserMenuProps {
+  name: string;
+  email?: string | null;
+  isAdmin?: boolean;
+  tone?: "light" | "dark";
+}
 
-  // Cerrar si se hace click fuera
+export default function UserMenu({ name, email, isAdmin = false, tone = "light" }: UserMenuProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (!open) return;
+    const onPointer = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const itemClass =
+    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-neutral-600 transition hover:bg-primary-50 hover:text-primary";
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white font-black flex items-center justify-center text-sm shadow-md shadow-primary/20 hover:scale-105 transition-transform"
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Menú de ${name}`}
+        className={cn(
+          "flex items-center gap-3 rounded-2xl p-1 pr-1 transition sm:pr-3",
+          tone === "dark" ? "hover:bg-white/10" : "hover:bg-neutral-100"
+        )}
       >
-        {userInitials}
+        <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary-dark text-sm font-black text-white shadow-glow-primary">
+          {getInitials(name)}
+        </span>
+        <span className="hidden max-w-36 truncate text-left text-sm leading-tight sm:block">
+          <span className={cn("block truncate font-bold", tone === "dark" ? "text-white" : "text-neutral-900")}>{name}</span>
+          <span className={cn("block text-xs font-medium", tone === "dark" ? "text-white/60" : "text-neutral-500")}>
+            {isAdmin ? "Administrador/a" : "Alumno/a"}
+          </span>
+        </span>
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-neutral-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
-          <div className="px-4 py-3 border-b border-neutral-100 mb-1">
-            <p className="text-sm font-bold text-neutral-900 truncate">{userName}</p>
-            <p className="text-xs text-neutral-500 font-medium">{isAdmin ? "Administrador" : "Alumno"}</p>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-2xl border border-neutral-100 bg-white p-2 shadow-lift animate-scale-in"
+        >
+          <div className="mb-1 border-b border-neutral-100 px-3 pt-2 pb-3">
+            <p className="truncate text-sm font-bold text-neutral-900">{name}</p>
+            {email && <p className="truncate text-xs text-neutral-500">{email}</p>}
           </div>
-          
-          <Link 
-            href={isAdmin ? "/admin/settings" : "/dashboard/settings"} 
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-neutral-600 hover:text-primary hover:bg-primary/5 transition-colors"
-          >
-            <Settings size={16} />
-            Configuración de perfil
+          <Link role="menuitem" href="/dashboard/settings" onClick={() => setOpen(false)} className={itemClass}>
+            <Settings size={16} aria-hidden="true" />
+            Mi perfil
           </Link>
-          
-          <div className="h-px bg-neutral-100 my-1 mx-2" />
-          
-          <a 
-            href="/auth/signout"
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
-          >
-            <LogOut size={16} />
-            Cerrar sesión
-          </a>
+          {isAdmin && (
+            <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className={itemClass}>
+              <Shield size={16} aria-hidden="true" />
+              Panel de administración
+            </Link>
+          )}
+          <Link role="menuitem" href="/" onClick={() => setOpen(false)} className={itemClass}>
+            <Globe size={16} aria-hidden="true" />
+            Web de la academia
+          </Link>
+          <div className="my-1 h-px bg-neutral-100" />
+          <form action="/auth/signout" method="post">
+            <button role="menuitem" type="submit" className={cn(itemClass, "text-error hover:bg-error/10 hover:text-error")}>
+              <LogOut size={16} aria-hidden="true" />
+              Cerrar sesión
+            </button>
+          </form>
         </div>
       )}
     </div>

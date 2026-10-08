@@ -1,22 +1,25 @@
-// Componente de negocio — Formulario de Registro
-// Ref: AcademiaSanPedro/01_Requirements/01_User_Flow_Login.md → Flujo de Registro (Sign Up)
+// Formulario de Registro
+// Ref: AcademiaSanPedro/03_Flows.md → Registro
 
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { registroSchema, type RegistroFormData } from "@/lib/validators/auth";
 import { createClient } from "@/lib/supabase/client";
-import InputField from "@/components/ui/InputField";
+import { CheckboxField, InputField } from "@/components/ui/Form";
+import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
-import DividerWithText from "@/components/ui/DividerWithText";
-import GoogleIcon from "@/components/ui/GoogleIcon";
+import GoogleButton from "./GoogleButton";
+import PasswordInput from "./PasswordInput";
+
+const AFTER_SIGNUP = "/dashboard/questionnaire";
 
 export default function RegistroForm() {
   const router = useRouter();
-  const supabase = createClient();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -25,74 +28,51 @@ export default function RegistroForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegistroFormData>({
     resolver: zodResolver(registroSchema),
+    defaultValues: { privacy: false, marketing_consent: false },
   });
 
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Registro con email y contraseña
   const onSubmit = async (data: RegistroFormData) => {
     setServerError(null);
-    setSuccessMessage(null);
 
-    const { data: authData, error } = await supabase.auth.signUp({
+    const { data: authData, error } = await createClient().auth.signUp({
       email: data.email,
       password: data.password,
       options: {
-        data: {
-          full_name: data.full_name,
-        },
+        data: { full_name: data.full_name, marketing_consent: data.marketing_consent },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${AFTER_SIGNUP}`,
       },
     });
 
     if (error) {
-      if (error.message.includes("already registered")) {
-        setServerError("Este email ya está registrado. Inicia sesión.");
-      } else {
-        setServerError("Error al crear la cuenta. Inténtalo de nuevo.");
-      }
+      setServerError(
+        /already registered|already exists/i.test(error.message)
+          ? "Este email ya está registrado. Inicia sesión o recupera tu contraseña."
+          : "No hemos podido crear la cuenta. Inténtalo de nuevo en unos segundos."
+      );
       return;
     }
 
-    // Si Supabase requiere confirmación de email, no habrá sesión activa
-    if (authData.user && !authData.session) {
+    // Supabase devuelve un usuario sin identidades si el email ya existía (protección anti-enumeración)
+    if (authData.user && authData.user.identities?.length === 0) {
+      setServerError("Este email ya está registrado. Inicia sesión o recupera tu contraseña.");
+      return;
+    }
+
+    // Con confirmación de email activada no hay sesión todavía
+    if (!authData.session) {
       router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
       return;
     }
 
-    // Si no requiere confirmación, redirigir al cuestionario
-    router.push("/dashboard/cuestionario");
+    router.replace(AFTER_SIGNUP);
     router.refresh();
-  };
-
-  // Registro/Login con Google OAuth
-  const handleGoogleSignUp = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Mensaje de éxito post-registro (cuando se requiere confirmación de email) */}
-      {successMessage && (
-        <div
-          className="rounded-xl bg-success/10 border border-success/20 px-5 py-4 text-sm text-success"
-          role="status"
-        >
-          <p className="font-semibold mb-1">✅ ¡Registro exitoso!</p>
-          <p>{successMessage}</p>
-        </div>
-      )}
-
-      {/* Formulario de email/contraseña — se oculta si ya se registró */}
-      {!successMessage && (
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         <InputField
           label="Nombre completo"
-          type="text"
           placeholder="María García López"
           autoComplete="name"
           error={errors.full_name?.message}
@@ -106,52 +86,58 @@ export default function RegistroForm() {
           error={errors.email?.message}
           {...register("email")}
         />
-        <InputField
-          label="Contraseña"
-          type="password"
-          placeholder="Mínimo 8 caracteres"
-          autoComplete="new-password"
-          error={errors.password?.message}
-          {...register("password")}
-        />
-        <InputField
-          label="Confirmar contraseña"
-          type="password"
-          placeholder="Repite tu contraseña"
-          autoComplete="new-password"
-          error={errors.confirm_password?.message}
-          {...register("confirm_password")}
-        />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <PasswordInput
+            label="Contraseña"
+            placeholder="Mín. 8 caracteres"
+            autoComplete="new-password"
+            error={errors.password?.message}
+            {...register("password")}
+          />
+          <PasswordInput
+            label="Repite la contraseña"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            error={errors.confirm_password?.message}
+            {...register("confirm_password")}
+          />
+        </div>
 
-        {serverError && (
-          <div
-            className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error"
-            role="alert"
-          >
-            {serverError}
-          </div>
-        )}
+        <div className="flex flex-col gap-3 rounded-2xl bg-neutral-50 p-4">
+          <CheckboxField
+            label={
+              <>
+                He leído y acepto la{" "}
+                <Link href="/legal/privacidad" target="_blank" className="font-semibold text-primary underline-offset-2 hover:underline">
+                  política de privacidad
+                </Link>
+                .
+              </>
+            }
+            error={errors.privacy?.message}
+            {...register("privacy")}
+          />
+          <CheckboxField
+            label="Quiero recibir novedades, ofertas y apertura de plazos por email (opcional)."
+            {...register("marketing_consent")}
+          />
+        </div>
 
-        <Button type="submit" isLoading={isSubmitting}>
-          Crear Cuenta
+        {serverError && <Alert tone="error">{serverError}</Alert>}
+
+        <Button type="submit" variant="secondary" size="lg" fullWidth isLoading={isSubmitting} loadingText="Creando cuenta…">
+          Crear cuenta gratis
         </Button>
       </form>
-      )}
 
-      {/* Separador y OAuth — se ocultan tras registro exitoso */}
-      {!successMessage && (
-      <>
-      <DividerWithText text="o continúa con" />
-
-      {/* Botón de Google OAuth */}
-      <Button variant="google" type="button" onClick={handleGoogleSignUp}>
-        <span className="flex items-center justify-center gap-3">
-          <GoogleIcon />
-          Continuar con Google
-        </span>
-      </Button>
-      </>
-      )}
+      <GoogleButton next={AFTER_SIGNUP} />
+      <p className="-mt-2 text-center text-xs text-neutral-400">
+        Al continuar con Google aceptas la{" "}
+        <Link href="/legal/privacidad" className="underline underline-offset-2 hover:text-neutral-600">
+          política de privacidad
+        </Link>
+        .
+      </p>
     </div>
   );
 }

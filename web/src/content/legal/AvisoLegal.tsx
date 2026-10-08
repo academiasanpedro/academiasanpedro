@@ -1,55 +1,62 @@
-import type { Metadata } from "next";
+// Texto por defecto del Aviso Legal (se sustituye desde /admin/legal)
+// Pendiente: titular y NIF (ver 06_Backlog)
 
-export const metadata: Metadata = {
-  title: "Aviso Legal | Academia San Pedro",
-};
+import { CONTACT, SITE_URL } from "@/lib/constants";
 
-export default function AvisoLegalPage() {
+export default function AvisoLegal() {
   return (
     <>
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-8">Aviso Legal</h1>
-      
       <p>
-        El presente aviso legal regula el uso y utilización del sitio web de la
-        Academia de Idiomas San Pedro, al que se accede a través de la dirección{" "}
-        <a href="/" className="text-primary hover:underline">www.academiasanpedro.com</a>.
+        El presente aviso legal regula el uso del sitio web de la Academia de Idiomas San Pedro, accesible en{" "}
+        <a href={SITE_URL}>{SITE_URL.replace(/^https?:\/\//, "")}</a>.
       </p>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">1. Datos Identificativos</h2>
+      <h2>1. Datos identificativos</h2>
       <p>
-        En cumplimiento con el deber de información recogido en artículo 10 de la Ley
-        34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del
-        Comercio Electrónico, a continuación se reflejan los siguientes datos:
+        En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información y del Comercio
+        Electrónico (LSSI-CE), se facilitan los siguientes datos:
       </p>
-      <ul className="list-disc pl-5 space-y-2 mt-4">
-        <li><strong>Titular:</strong> [Nombre de la empresa o autónomo titular]</li>
-        <li><strong>NIF/CIF:</strong> [CIF/NIF]</li>
-        <li><strong>Dirección:</strong> [Dirección física completa]</li>
-        <li><strong>Correo electrónico:</strong> [Email de contacto]</li>
-        <li><strong>Teléfono:</strong> [Teléfono]</li>
+      <ul>
+        <li>
+          <strong>Titular:</strong> [Razón social o nombre del titular]
+        </li>
+        <li>
+          <strong>NIF/CIF:</strong> [NIF/CIF]
+        </li>
+        <li>
+          <strong>Domicilio:</strong> {CONTACT.address}, {CONTACT.postalCode} {CONTACT.city}
+        </li>
+        <li>
+          <strong>Correo electrónico:</strong> <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+        </li>
+        <li>
+          <strong>Teléfono:</strong> {CONTACT.phone}
+        </li>
       </ul>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">2. Usuarios</h2>
+      <h2>2. Usuarios</h2>
       <p>
-        El acceso y/o uso de este portal atribuye la condición de USUARIO, que acepta,
-        desde dicho acceso y/o uso, las Condiciones Generales de Uso aquí reflejadas.
+        El acceso y uso de este sitio web atribuye la condición de usuario, que acepta las condiciones generales de uso
+        aquí reflejadas.
       </p>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">3. Propiedad Intelectual e Industrial</h2>
+      <h2>3. Uso del sitio web</h2>
       <p>
-        El Titular, por sí o como cesionario, es titular de todos los derechos de
-        propiedad intelectual e industrial de su página web, así como de los elementos
-        contenidos en la misma (a título enunciativo, imágenes, sonido, audio, vídeo,
-        software o textos; marcas o logotipos, combinaciones de colores, estructura y
-        diseño, selección de materiales usados, etc.). Todos los derechos reservados.
+        El usuario se compromete a hacer un uso adecuado de los contenidos y servicios (registro, cuestionario, test de
+        nivel y formulario de contacto) y a facilitar datos veraces.
       </p>
+
+      <h2>4. Propiedad intelectual e industrial</h2>
       <p>
-        En virtud de lo dispuesto en los artículos 8 y 32.1, párrafo segundo, de la Ley
-        de Propiedad Intelectual, quedan expresamente prohibidas la reproducción, la
-        distribución y la comunicación pública, incluida su modalidad de puesta a
-        disposición, de la totalidad o parte de los contenidos de esta página web, con
-        fines comerciales, en cualquier soporte y por cualquier medio técnico, sin la
-        autorización del Titular.
+        El titular es propietario o cuenta con licencia de todos los derechos de propiedad intelectual e industrial del
+        sitio web y de sus contenidos (textos, imágenes, logotipos, diseño, código, etc.). Queda prohibida su
+        reproducción, distribución o comunicación pública con fines comerciales sin autorización expresa.
+      </p>
+
+      <h2>5. Responsabilidad</h2>
+      <p>
+        El titular no se hace responsable de los daños derivados del uso indebido del sitio web ni de interrupciones del
+        servicio ajenas a su control.
       </p>
     </>
   );

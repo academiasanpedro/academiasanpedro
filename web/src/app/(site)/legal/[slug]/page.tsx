@@ -1,72 +1,70 @@
-import { createClient } from "@/lib/supabase/server";
+// Páginas legales: contenido editable desde /admin/legal (tabla legal_pages)
+// con texto por defecto si la fila no existe o está vacía.
+
+import type { ComponentType } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import GlobalHeader from "@/components/layout/GlobalHeader";
-import Footer from "@/components/landing/Footer";
+import AvisoLegal from "@/content/legal/AvisoLegal";
+import Cookies from "@/content/legal/Cookies";
+import Privacidad from "@/content/legal/Privacidad";
+import { LEGAL_PAGES, type LegalSlug } from "@/lib/constants";
+import { createPublicClient } from "@/lib/supabase/public";
+import { formatDate } from "@/lib/utils";
 
-import { connection } from "next/server";
-import { Suspense } from "react";
+const DEFAULT_CONTENT: Record<LegalSlug, ComponentType> = {
+  "aviso-legal": AvisoLegal,
+  privacidad: Privacidad,
+  cookies: Cookies,
+};
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("legal_pages")
-    .select("title")
-    .eq("slug", slug)
-    .single();
+export const dynamicParams = false;
+export const revalidate = 3600;
 
-  if (!data) {
-    return { title: "Aviso Legal | Academia San Pedro" };
-  }
-
-  return { title: `${data.title} | Academia San Pedro` };
+export function generateStaticParams() {
+  return LEGAL_PAGES.map((page) => ({ slug: page.slug }));
 }
 
-export const dynamic = "force-dynamic";
-
-export default function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
-  return (
-    <>
-      <GlobalHeader />
-      <main className="min-h-screen bg-neutral-50/50 pt-24 pb-20">
-        <Suspense fallback={<div className="max-w-3xl mx-auto px-6 py-12 text-center text-neutral-500 font-bold">Cargando...</div>}>
-          <LegalPageContent params={params} />
-        </Suspense>
-      </main>
-      <Footer />
-    </>
-  );
+async function getLegalPage(slug: LegalSlug) {
+  try {
+    const { data } = await createPublicClient()
+      .from("legal_pages")
+      .select("content, updated_at")
+      .eq("slug", slug)
+      .maybeSingle();
+    return data as { content: string | null; updated_at: string | null } | null;
+  } catch {
+    return null;
+  }
 }
 
-async function LegalPageContent({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: PageProps<"/legal/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  
-  const { data: page, error } = await supabase
-    .from("legal_pages")
-    .select("title, content")
-    .eq("slug", slug)
-    .single();
+  const page = LEGAL_PAGES.find((item) => item.slug === slug);
+  return { title: page?.title ?? "Legal" };
+}
 
-  if (error || !page) {
-    notFound();
-  }
+export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) {
+  const { slug } = await params;
+  const page = LEGAL_PAGES.find((item) => item.slug === slug);
+  if (!page) notFound();
+
+  const stored = await getLegalPage(page.slug);
+  const html = stored?.content?.trim();
+  const Fallback = DEFAULT_CONTENT[page.slug];
 
   return (
-    <div className="max-w-3xl mx-auto px-6">
-          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl shadow-neutral-200/40 border border-neutral-100">
-            <h1 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight mb-8">
-              {page.title}
-            </h1>
-            
-            {/* The content will be rendered as basic HTML or mapped. For simplicity we assume it's text with some basic formatting or just newline separated paragraphs for now. We can use white-space: pre-wrap */}
-            <div className="prose prose-neutral max-w-none">
-              <div 
-                className="whitespace-pre-wrap text-neutral-700 leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{ __html: page.content }} 
-              />
-            </div>
+    <div className="bg-neutral-50 px-5 py-16 sm:py-20">
+      <article className="mx-auto max-w-3xl rounded-3xl border border-neutral-200/70 bg-white p-8 shadow-soft sm:p-12">
+        <p className="mb-3 text-xs font-bold tracking-[0.2em] text-secondary uppercase">Información legal</p>
+        <h1 className="text-3xl font-black tracking-tight text-neutral-900 sm:text-4xl">{page.title}</h1>
+        {html && stored?.updated_at && (
+          <p className="mt-2 text-sm text-neutral-400">Última actualización: {formatDate(stored.updated_at)}</p>
+        )}
+        <div className="legal-content mt-8">
+          {/* HTML redactado por administradores autenticados desde /admin/legal */}
+          {html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : <Fallback />}
         </div>
-      </div>
+      </article>
+    </div>
   );
 }

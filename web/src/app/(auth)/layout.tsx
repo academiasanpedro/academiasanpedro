@@ -1,105 +1,87 @@
-// Layout compartido para las páginas de autenticación (Login y Registro)
-// Ref: AcademiaSanPedro/00_Meta/02_UI_UX_Guidelines.md → Layout de Páginas de Auth
-// Desktop: Split layout (panel decorativo izquierdo + formulario derecho)
-// Mobile: Solo el formulario con el logo arriba
+// Layout de autenticación — Split: panel de marca (lg+) + formulario
+// Ref: AcademiaSanPedro/01_Design.md
 
-import type { ReactNode } from "react";
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft, Quote, Star } from "lucide-react";
+import Logo from "@/components/ui/Logo";
 
-export default function AuthLayout({ children }: { children: ReactNode }) {
+const STATS = [
+  { value: "+90 %", label: "aprobados Cambridge" },
+  { value: "4", label: "idiomas" },
+  { value: "5,0", label: "valoración media" },
+];
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      {/* Panel decorativo — Solo visible en desktop (lg+) */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden bg-neutral-950">
-        {/* Mesh Gradient Animado / Estático Premium */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[25%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/40 blur-[120px] mix-blend-screen" />
-          <div className="absolute top-[20%] -right-[20%] w-[60%] h-[60%] rounded-full bg-secondary/20 blur-[100px] mix-blend-screen" />
-          <div className="absolute -bottom-[20%] left-[10%] w-[80%] h-[80%] rounded-full bg-primary-dark/60 blur-[130px] mix-blend-screen" />
+      <aside className="relative hidden overflow-hidden bg-primary-950 lg:flex lg:w-1/2 xl:w-[55%]">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-1/4 -left-[10%] h-[70%] w-[70%] rounded-full bg-primary/50 blur-[120px]" />
+          <div className="absolute top-1/3 -right-1/4 h-[55%] w-[55%] rounded-full bg-secondary/25 blur-[110px]" />
+          <div className="absolute inset-0 bg-dots opacity-[0.04]" />
         </div>
 
-        {/* Patrón decorativo sutil (dots) */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-            backgroundSize: "32px 32px",
-          }}
-        />
+        <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
+          <Logo tone="dark" />
 
-        {/* Contenido del panel */}
-        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 text-white h-full w-full">
-          {/* Glassmorphism Card */}
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-10 xl:p-12 rounded-[2rem] shadow-2xl">
-            {/* Logo / Nombre */}
-            <div className="mb-12">
-              <div className="flex items-center gap-4 mb-2">
-                <Image
-                  src="/assets/logo.png"
-                  alt="Logo Academia San Pedro"
-                  width={48}
-                  height={48}
-                  className="rounded-2xl border border-white/20 shadow-inner brightness-0 invert drop-shadow-md"
-                />
-                <span className="text-xl font-semibold tracking-wide text-white/90">
-                  Academia San Pedro
-                </span>
-              </div>
-            </div>
-
-            {/* Tagline */}
-            <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-6 tracking-tight">
+          <div className="max-w-xl">
+            <h2 className="text-5xl leading-[1.05] font-black tracking-tight text-white xl:text-6xl">
               Tu idioma. Tu nivel.
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-amber-200">
+              <span className="bg-gradient-to-r from-secondary-light via-white to-white bg-clip-text text-transparent">
                 Tu objetivo.
               </span>
-            </h1>
-            <p className="text-lg text-white/70 max-w-md leading-relaxed font-light">
-              Aprende inglés, francés, alemán o italiano con grupos adaptados a tu nivel y prepárate para conseguir tu certificación oficial.
+            </h2>
+            <p className="mt-6 text-lg leading-relaxed text-white/70">
+              Aprende inglés, francés, alemán o italiano con grupos adaptados a tu nivel y prepárate para conseguir tu
+              certificación oficial.
             </p>
 
-            {/* Estadísticas decorativas */}
-            <div className="flex gap-10 mt-12 pt-10 border-t border-white/10">
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">+300</div>
-                <div className="text-sm text-white/60 mt-1.5 font-medium">Alumnos formados</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">4</div>
-                <div className="text-sm text-white/60 mt-1.5 font-medium">Idiomas</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white tracking-tight">+90%</div>
-                <div className="text-sm text-white/60 mt-1.5 font-medium">Aprobados Cambridge</div>
+            <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-white/10 pt-8">
+              {STATS.map((stat) => (
+                <div key={stat.label}>
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd className="text-3xl font-black tracking-tight text-white">{stat.value}</dd>
+                  <dd className="mt-1 text-sm font-medium text-white/55">{stat.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <figure className="max-w-xl rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <Quote size={28} className="text-secondary" aria-hidden="true" />
+              <div className="flex gap-0.5 text-gold" aria-label="5 de 5 estrellas">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star key={i} size={14} fill="currentColor" aria-hidden="true" />
+                ))}
               </div>
             </div>
-          </div>
+            <blockquote className="mt-4 text-lg font-medium text-white/90">
+              “Llevo 3 años en esta academia y he conseguido dos títulos: B1 y B2.”
+            </blockquote>
+            <figcaption className="mt-3 text-sm font-semibold text-white/50">Alumna · Cambridge B1 y B2</figcaption>
+          </figure>
         </div>
-      </div>
+      </aside>
 
-      {/* Panel del formulario */}
-      <div className="flex w-full lg:w-1/2 xl:w-[45%] flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-20 py-12">
-        {/* Logo mobile — Solo visible en móvil */}
-        <div className="mb-8 lg:hidden">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/assets/logo.png"
-              alt="Logo Academia San Pedro"
-              width={36}
-              height={36}
-              className="rounded-lg drop-shadow-md"
-            />
-            <span className="text-lg font-semibold text-neutral-900">
-              Academia San Pedro
-            </span>
+      <main id="contenido" className="flex w-full flex-col bg-white lg:w-1/2 xl:w-[45%]">
+        <div className="flex items-center justify-between px-6 pt-6 sm:px-12">
+          <div className="lg:hidden">
+            <Logo />
           </div>
+          <Link
+            href="/"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold text-neutral-500 transition hover:text-primary"
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Volver a la web
+          </Link>
         </div>
-
-        {/* Contenido del formulario (inyectado por cada página) */}
-        <div className="w-full max-w-md mx-auto lg:mx-0">{children}</div>
-      </div>
+        <div className="flex flex-1 items-center px-6 py-12 sm:px-12 lg:px-16 xl:px-20">
+          <div className="mx-auto w-full max-w-md animate-fade-up">{children}</div>
+        </div>
+      </main>
     </div>
   );
 }

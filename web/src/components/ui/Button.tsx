@@ -1,74 +1,89 @@
-// Componente UI — Botón con variantes y estados de carga
-// Ref: AcademiaSanPedro/00_Meta/02_UI_UX_Guidelines.md → Componentes UI Base → Botones
+// Botón y enlace con aspecto de botón
+// Ref: AcademiaSanPedro/01_Design.md → Primitivas
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import Link from "next/link";
+import type { ButtonHTMLAttributes, ComponentProps } from "react";
+import { cn } from "@/lib/utils";
+import Spinner from "./Spinner";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  variant?: "primary" | "secondary" | "google";
-  isLoading?: boolean;
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "google" | "dark" | "light" | "white";
+export type ButtonSize = "sm" | "md" | "lg";
+
+interface StyleProps {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   fullWidth?: boolean;
+  className?: string;
+}
+
+const base =
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl font-bold whitespace-nowrap transition-all duration-200 ease-out select-none focus-visible:outline-none focus-visible:ring-4 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55";
+
+const variants: Record<ButtonVariant, string> = {
+  primary:
+    "bg-primary text-white shadow-glow-primary hover:-translate-y-0.5 hover:bg-primary-dark focus-visible:ring-primary/30",
+  secondary:
+    "bg-secondary text-white shadow-glow-secondary hover:-translate-y-0.5 hover:bg-secondary-dark focus-visible:ring-secondary/30",
+  outline:
+    "border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:border-primary/30 hover:bg-primary-50 hover:text-primary focus-visible:ring-primary/20",
+  ghost: "text-neutral-600 hover:bg-primary-50 hover:text-primary focus-visible:ring-primary/20",
+  google:
+    "border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:-translate-y-0.5 hover:bg-neutral-50 hover:shadow-md focus-visible:ring-neutral-200",
+  dark: "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-900/30",
+  white: "bg-white text-primary-dark shadow-xl hover:-translate-y-0.5 hover:text-secondary focus-visible:ring-white/40",
+  light:
+    "border border-white/20 bg-white/10 text-white backdrop-blur-md hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/20 focus-visible:ring-white/30",
+};
+
+const sizes: Record<ButtonSize, string> = {
+  sm: "h-9 px-3.5 text-sm",
+  md: "h-11 px-5 text-sm",
+  lg: "h-14 px-7 text-base",
+};
+
+export function buttonStyles({ variant = "primary", size = "md", fullWidth, className }: StyleProps = {}) {
+  return cn(base, variants[variant], sizes[size], fullWidth && "w-full", className);
+}
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, StyleProps {
+  isLoading?: boolean;
+  loadingText?: string;
 }
 
 export default function Button({
-  children,
-  variant = "primary",
+  variant,
+  size,
+  fullWidth,
+  className,
   isLoading = false,
-  fullWidth = true,
-  className = "",
+  loadingText,
   disabled,
+  type = "button",
+  children,
   ...props
 }: ButtonProps) {
-  const baseStyles =
-    "relative rounded-xl px-6 py-3.5 font-semibold text-sm transition-all duration-300 ease-in-out focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]";
-
-  const variants = {
-    primary:
-      "bg-primary text-white shadow-[0_4px_14px_0_rgba(var(--color-primary),0.39)] hover:bg-primary-dark hover:shadow-[0_6px_20px_rgba(var(--color-primary),0.23)] hover:-translate-y-0.5 focus-visible:ring-4 focus-visible:ring-primary/30 border border-transparent",
-    secondary:
-      "border border-primary text-primary bg-transparent hover:bg-primary/5 focus-visible:ring-4 focus-visible:ring-primary/20",
-    google:
-      "border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:bg-neutral-50 hover:shadow-md hover:border-neutral-300 hover:-translate-y-0.5 focus-visible:ring-4 focus-visible:ring-neutral-200",
-  };
-
   return (
     <button
-      className={`
-        ${baseStyles}
-        ${variants[variant]}
-        ${fullWidth ? "w-full" : ""}
-        ${className}
-      `}
+      type={type}
+      className={buttonStyles({ variant, size, fullWidth, className })}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       {...props}
     >
       {isLoading ? (
-        <span className="flex items-center justify-center gap-2">
-          <svg
-            className="h-4 w-4 animate-spin"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
-          Cargando...
-        </span>
+        <>
+          <Spinner className="size-4" />
+          {loadingText ?? children}
+        </>
       ) : (
         children
       )}
     </button>
   );
+}
+
+type ButtonLinkProps = ComponentProps<typeof Link> & StyleProps;
+
+export function ButtonLink({ variant, size, fullWidth, className, ...props }: ButtonLinkProps) {
+  return <Link className={buttonStyles({ variant, size, fullWidth, className })} {...props} />;
 }

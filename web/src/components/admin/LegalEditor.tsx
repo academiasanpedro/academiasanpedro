@@ -1,104 +1,132 @@
 "use client";
 
+// Editor de textos legales (HTML básico) con vista previa. Vacío = texto por defecto.
+
 import { useState } from "react";
-import { Save, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Eye, PenLine, Save } from "lucide-react";
 import { updateLegalPage } from "@/app/actions/legal";
+import Alert from "@/components/ui/Alert";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
 
-export default function LegalEditor({ 
-  pages 
-}: { 
-  pages: { slug: string; title: string; content: string }[] 
-}) {
+export interface EditableLegalPage {
+  slug: string;
+  title: string;
+  content: string;
+}
+
+export default function LegalEditor({ pages }: { pages: EditableLegalPage[] }) {
   const [activeSlug, setActiveSlug] = useState(pages[0]?.slug);
-  const [contents, setContents] = useState<Record<string, string>>(() => {
-    const acc: Record<string, string> = {};
-    pages.forEach(p => {
-      acc[p.slug] = p.content;
-    });
-    return acc;
-  });
+  const [saved, setSaved] = useState<Record<string, string>>(() =>
+    Object.fromEntries(pages.map((page) => [page.slug, page.content]))
+  );
+  const [drafts, setDrafts] = useState<Record<string, string>>(saved);
+  const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{type: "success"|"error", text: string} | null>(null);
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
 
-  if (!pages || pages.length === 0) {
-    return (
-      <div className="text-center py-20 text-neutral-500">
-        <AlertCircle className="w-12 h-12 mx-auto text-neutral-300 mb-4" />
-        <p>No se han encontrado páginas legales en la base de datos.</p>
-        <p className="text-sm mt-2">Ejecuta el script SQL en Supabase para crearlas.</p>
-      </div>
-    );
-  }
-
-  const activePage = pages.find(p => p.slug === activeSlug);
+  const active = pages.find((page) => page.slug === activeSlug) ?? pages[0];
+  const draft = drafts[active.slug] ?? "";
+  const dirty = draft !== (saved[active.slug] ?? "");
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage(null);
-    const content = contents[activeSlug];
-    const res = await updateLegalPage(activeSlug, content);
-    
-    if (res.success) {
-      setMessage({ type: "success", text: "Página guardada correctamente." });
-      setTimeout(() => setMessage(null), 3000);
-    } else {
-      setMessage({ type: "error", text: "Error al guardar: " + res.error });
-    }
+    setFeedback(null);
+    const result = await updateLegalPage(active.slug, draft);
     setSaving(false);
+    if (result.ok) {
+      setSaved((current) => ({ ...current, [active.slug]: draft }));
+      setFeedback({ ok: true, text: result.message ?? "Guardado." });
+    } else {
+      setFeedback({ ok: false, text: result.error });
+    }
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-neutral-200 overflow-hidden">
-      <div className="flex border-b border-neutral-200 overflow-x-auto">
-        {pages.map(p => (
-          <button
-            key={p.slug}
-            onClick={() => setActiveSlug(p.slug)}
-            className={`px-6 py-4 font-bold text-sm whitespace-nowrap transition-colors ${
-              activeSlug === p.slug 
-                ? "border-b-2 border-primary text-primary" 
-                : "text-neutral-500 hover:text-neutral-800"
-            }`}
-          >
-            {p.title}
-          </button>
-        ))}
+    <Card className="overflow-hidden">
+      <div role="tablist" aria-label="Páginas legales" className="flex overflow-x-auto border-b border-neutral-100">
+        {pages.map((page) => {
+          const pageDirty = (drafts[page.slug] ?? "") !== (saved[page.slug] ?? "");
+          return (
+            <button
+              key={page.slug}
+              type="button"
+              role="tab"
+              aria-selected={page.slug === active.slug}
+              onClick={() => {
+                setActiveSlug(page.slug);
+                setFeedback(null);
+              }}
+              className={cn(
+                "flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold whitespace-nowrap transition",
+                page.slug === active.slug ? "border-primary text-primary" : "border-transparent text-neutral-500 hover:text-neutral-800"
+              )}
+            >
+              {page.title}
+              {pageDirty && <span className="size-2 rounded-full bg-warning" aria-label="cambios sin guardar" />}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="p-6 sm:p-8 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-neutral-900">{activePage?.title}</h2>
-            <p className="text-sm text-neutral-500 mt-1">
-              Puedes usar HTML básico como &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, etc. para maquetar el texto.
-            </p>
+      <div className="space-y-5 p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            {(saved[active.slug] ?? "").trim() ? (
+              <Badge tone="primary">Texto personalizado</Badge>
+            ) : (
+              <Badge tone="neutral">Usando texto por defecto</Badge>
+            )}
+            {dirty && <Badge tone="warning">Sin guardar</Badge>}
+            <Link href={`/legal/${active.slug}`} target="_blank" className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+              Ver publicada <ExternalLink size={12} aria-hidden="true" />
+            </Link>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-[0_4px_14px_0_rgba(36,59,120,0.39)] hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:transform-none"
-          >
-            <Save size={16} />
-            {saving ? "Guardando..." : "Guardar Cambios"}
-          </button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPreview((value) => !value)}>
+              {preview ? <PenLine size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
+              {preview ? "Editar" : "Vista previa"}
+            </Button>
+            <Button size="sm" onClick={handleSave} isLoading={saving} loadingText="Guardando…" disabled={!dirty}>
+              <Save size={14} aria-hidden="true" />
+              Guardar
+            </Button>
+          </div>
         </div>
 
-        {message && (
-          <div className={`p-4 rounded-xl text-sm font-bold flex items-center gap-2 ${
-            message.type === "success" ? "bg-success/10 text-success" : "bg-error/10 text-error"
-          }`}>
-            <AlertCircle size={18} />
-            {message.text}
-          </div>
-        )}
+        {feedback && <Alert tone={feedback.ok ? "success" : "error"}>{feedback.text}</Alert>}
 
-        <textarea
-          value={contents[activeSlug] || ""}
-          onChange={(e) => setContents(prev => ({ ...prev, [activeSlug]: e.target.value }))}
-          className="w-full h-[500px] p-6 bg-neutral-50/50 border border-neutral-200 rounded-2xl text-sm text-neutral-700 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-inner font-mono resize-none leading-relaxed"
-          placeholder="Escribe aquí el contenido legal..."
-        />
+        {preview ? (
+          <div className="min-h-[420px] rounded-2xl border border-neutral-200 p-6">
+            {draft.trim() ? (
+              <div className="legal-content" dangerouslySetInnerHTML={{ __html: draft }} />
+            ) : (
+              <p className="text-sm text-neutral-500 italic">Vacío: en la web se mostrará el texto por defecto.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <label htmlFor="legal-html" className="sr-only">
+              Contenido HTML de {active.title}
+            </label>
+            <textarea
+              id="legal-html"
+              value={draft}
+              onChange={(event) => setDrafts((current) => ({ ...current, [active.slug]: event.target.value }))}
+              spellCheck
+              className="h-[480px] w-full resize-y rounded-2xl border border-neutral-200 bg-neutral-50/60 p-5 font-mono text-sm leading-relaxed text-neutral-700 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none"
+              placeholder={"<h2>1. Datos identificativos</h2>\n<p>Texto…</p>\n<ul><li>Elemento</li></ul>"}
+            />
+            <p className="text-xs text-neutral-500">
+              Admite HTML básico: &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;/&lt;li&gt;, &lt;a href&gt;. Déjalo vacío
+              para usar el texto por defecto (incluye los datos de contacto de la academia).
+            </p>
+          </>
+        )}
       </div>
-    </div>
+    </Card>
   );
 }

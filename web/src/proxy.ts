@@ -1,11 +1,10 @@
-// Middleware — Protección de rutas
-// Ref: AcademiaSanPedro/02_Architecture/02_Frontend_Routes.md → Middleware de Protección
-// Rutas /dashboard/* requieren sesión. Rutas /auth/* redirigen si ya hay sesión.
+// Proxy (antes "middleware") — Protección de rutas y refresco de sesión
+// Ref: AcademiaSanPedro/04_Routes.md → Proxy
 
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -17,11 +16,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response = NextResponse.next({ request });
-            response.cookies.set(name, value, options);
-          });
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
     }
@@ -31,44 +28,40 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
-  // Si no hay sesión y se intenta acceder a /dashboard, redirigir a login
-  if (!user && pathname.startsWith("/dashboard")) {
+  // Redirección que conserva las cookies de sesión refrescadas
+  const redirectTo = (url: URL) => {
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  };
+
+  const isPrivate = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+
+  if (!user && isPrivate) {
     const loginUrl = new URL("/auth/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    loginUrl.searchParams.set("next", pathname + search);
+    return redirectTo(loginUrl);
   }
 
-  // Protección extrema para el panel de /admin
-  if (pathname.startsWith("/admin")) {
-    if (!user) {
-      const loginUrl = new URL("/auth/login", request.url);
-      return NextResponse.redirect(loginUrl);
-    }
-    
-    // Consultar la base de datos para ver si tiene rol 'admin'
+  if (user && pathname.startsWith("/admin")) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
-    
-    if (profile?.role !== "admin") {
-      // Si un usuario normal intenta entrar a /admin, expulsarlo a su dashboard
-      const dashboardUrl = new URL("/dashboard", request.url);
-      return NextResponse.redirect(dashboardUrl);
-    }
+      .maybeSingle();
+
+    if (profile?.role !== "admin") return redirectTo(new URL("/dashboard", request.url));
   }
 
-  // Si hay sesión y se intenta acceder a /auth/login o registro, redirigir siempre al dashboard
   if (user && (pathname === "/auth/login" || pathname === "/auth/registro")) {
-    const dashboardUrl = new URL("/dashboard", request.url);
-    return NextResponse.redirect(dashboardUrl);
+    return redirectTo(new URL("/dashboard", request.url));
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/auth/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/auth/login", "/auth/registro"],
 };

@@ -1,56 +1,74 @@
-import type { Metadata } from "next";
+// Texto por defecto de la Política de Privacidad (se sustituye desde /admin/legal)
 
-export const metadata: Metadata = {
-  title: "Política de Privacidad | Academia San Pedro",
-};
+import { CONTACT } from "@/lib/constants";
 
-export default function PrivacidadPage() {
+export default function Privacidad() {
   return (
     <>
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-8">Política de Privacidad</h1>
-
       <p>
-        En Academia de Idiomas San Pedro estamos comprometidos con la protección y la
-        seguridad de los datos de carácter personal que los usuarios nos confían. Esta
-        Política de Privacidad describe cómo recopilamos, usamos y protegemos su
-        información en cumplimiento con el Reglamento General de Protección de Datos
-        (RGPD) y la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos
-        Personales y garantía de los derechos digitales.
+        En la Academia de Idiomas San Pedro protegemos los datos personales que nos confías, de acuerdo con el Reglamento
+        (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).
       </p>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">1. Responsable del Tratamiento</h2>
-      <ul className="list-disc pl-5 space-y-2 mt-4">
-        <li><strong>Titular:</strong> [Nombre de la empresa]</li>
-        <li><strong>NIF:</strong> [NIF/CIF]</li>
-        <li><strong>Dirección:</strong> [Dirección completa]</li>
-        <li><strong>Correo electrónico:</strong> [Email de Privacidad/Contacto]</li>
+      <h2>1. Responsable del tratamiento</h2>
+      <ul>
+        <li>
+          <strong>Titular:</strong> [Razón social o nombre del titular] · <strong>NIF:</strong> [NIF/CIF]
+        </li>
+        <li>
+          <strong>Dirección:</strong> {CONTACT.address}, {CONTACT.postalCode} {CONTACT.city}
+        </li>
+        <li>
+          <strong>Email:</strong> <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+        </li>
       </ul>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">2. Finalidad del Tratamiento</h2>
-      <p>
-        Recogemos y tratamos los datos personales con las siguientes finalidades:
-      </p>
-      <ul className="list-disc pl-5 space-y-2 mt-4">
-        <li>Gestionar la creación de su cuenta de alumno.</li>
-        <li>Realizar evaluaciones de nivel y enviar los resultados de las pruebas.</li>
-        <li>Comunicarnos con usted para responder a consultas y proporcionar soporte.</li>
-        <li>Gestionar las matrículas, pagos e inscripción en los cursos oficiales de Cambridge.</li>
+      <h2>2. Qué datos tratamos y para qué</h2>
+      <ul>
+        <li>
+          <strong>Cuenta de alumno</strong> (nombre, email, teléfono opcional): gestionar tu acceso al área privada.
+        </li>
+        <li>
+          <strong>Cuestionario y test de nivel</strong>: evaluar tu nivel, recomendarte un grupo y comunicarte el
+          resultado.
+        </li>
+        <li>
+          <strong>Formulario de contacto</strong>: responder a tu solicitud de información.
+        </li>
+        <li>
+          <strong>Comunicaciones comerciales</strong> (ofertas, apertura de plazos): solo si lo has aceptado
+          expresamente. Puedes retirarlo en cualquier momento desde tu perfil.
+        </li>
       </ul>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">3. Conservación de Datos</h2>
+      <h2>3. Base legal</h2>
       <p>
-        Los datos personales proporcionados se conservarán mientras se mantenga la relación
-        contractual o académica y no se solicite su supresión por el interesado, y
-        durante el plazo por el cuál pudieran derivarse responsabilidades legales por
-        los servicios prestados.
+        Tu consentimiento al registrarte o enviar un formulario, la ejecución de la relación precontractual o académica y,
+        en su caso, el cumplimiento de obligaciones legales.
       </p>
 
-      <h2 className="text-2xl font-bold text-neutral-900 mt-10 mb-4">4. Derechos de los Usuarios</h2>
+      <h2>4. Destinatarios</h2>
       <p>
-        Puede ejercer en cualquier momento sus derechos de acceso, rectificación,
-        supresión, limitación, oposición y portabilidad de sus datos enviando un correo
-        electrónico a [Email de Privacidad], acompañando copia de su DNI u otro documento
-        oficial que le identifique.
+        No cedemos tus datos a terceros salvo obligación legal. Utilizamos proveedores que actúan como encargados del
+        tratamiento con garantías adecuadas: Supabase (alojamiento de la base de datos y autenticación) y Google
+        (envío de emails).
+      </p>
+
+      <h2>5. Conservación</h2>
+      <p>
+        Mientras mantengas tu cuenta o la relación académica y, después, durante los plazos necesarios para atender
+        posibles responsabilidades legales.
+      </p>
+
+      <h2>6. Tus derechos</h2>
+      <p>
+        Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a{" "}
+        <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>. Si consideras que no hemos atendido correctamente tu
+        solicitud, puedes reclamar ante la Agencia Española de Protección de Datos (
+        <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">
+          www.aepd.es
+        </a>
+        ).
       </p>
     </>
   );

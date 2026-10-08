@@ -1,37 +1,34 @@
-// Página de Registro
-// Ruta: /auth/registro
-// Ref: AcademiaSanPedro/02_Architecture/02_Frontend_Routes.md
+// Página de Registro — Ruta: /auth/registro
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
+import AuthHeading from "@/components/features/AuthHeading";
 import RegistroForm from "@/components/features/RegistroForm";
 
 export const metadata: Metadata = {
-  title: "Crear Cuenta | Academia San Pedro",
-  description:
-    "Regístrate en la Academia de Idiomas San Pedro. Descubre tu nivel y comienza tu camino para dominar un nuevo idioma.",
+  title: "Crear cuenta",
+  description: "Regístrate gratis en la Academia de Idiomas San Pedro y descubre tu nivel con nuestro test online.",
 };
+
+const BENEFITS = ["Test de nivel gratuito", "Evaluado por profesores", "Sin compromiso"];
 
 export default function RegistroPage() {
   return (
     <>
-      <div className="mb-10">
-        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neutral-900 to-neutral-600 tracking-tight">
-          Crea tu cuenta
-        </h1>
-        <p className="mt-3 text-neutral-500 font-medium text-lg">
-          Regístrate para descubrir tu nivel y encontrar el curso perfecto.
-        </p>
-      </div>
-
+      <AuthHeading title="Crea tu cuenta" description="En 2 minutos podrás hacer tu prueba de nivel online." />
+      <ul className="-mt-3 mb-8 flex flex-wrap gap-x-5 gap-y-2">
+        {BENEFITS.map((benefit) => (
+          <li key={benefit} className="flex items-center gap-1.5 text-sm font-semibold text-neutral-600">
+            <CheckCircle2 size={16} className="text-success" aria-hidden="true" />
+            {benefit}
+          </li>
+        ))}
+      </ul>
       <RegistroForm />
-
-      <p className="mt-8 text-center text-sm text-neutral-700">
+      <p className="mt-8 text-center text-sm text-neutral-600">
         ¿Ya tienes cuenta?{" "}
-        <Link
-          href="/auth/login"
-          className="font-semibold text-primary hover:text-primary-dark transition-colors duration-200"
-        >
+        <Link href="/auth/login" className="font-bold text-primary transition hover:text-primary-dark">
           Inicia sesión
         </Link>
       </p>

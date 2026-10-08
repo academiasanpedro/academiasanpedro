@@ -1,197 +1,318 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ChevronRight, AlertCircle, RefreshCcw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+// Ejecución del test de nivel: una pregunta por pantalla, progreso guardado en localStorage,
+// atajos de teclado (1-6 / A-F, Enter, ←/→) y revisión antes de enviar.
+
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { IDIOMAS_OFERTADOS } from "@/lib/constants";
+import { ArrowLeft, ArrowRight, Check, HelpCircle, Send } from "lucide-react";
+import { submitLevelTest } from "@/app/actions/level-test";
+import Alert from "@/components/ui/Alert";
+import Button, { ButtonLink } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Flag from "@/components/ui/Flag";
+import type { PublicQuestion } from "@/lib/level-test";
+import { cn } from "@/lib/utils";
 
-export default function TestRunner({ testData }: { testData: Record<string, any[]> }) {
+const UNANSWERED = -1;
+const SKIPPED = -2; // "No lo sé" en pantalla; se envía como -1
+const LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+type Stage = "intro" | "question" | "review";
+
+function storageKey(language: string, total: number) {
+  return `level-test:${language}:${total}`;
+}
+
+function loadAnswers(key: string, total: number): number[] {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(key) ?? "null");
+    if (Array.isArray(saved) && saved.length === total) return saved;
+  } catch {
+    // almacenamiento no disponible o corrupto: empezar de cero
+  }
+  return new Array(total).fill(UNANSWERED);
+}
+
+const subscribeNoop = () => () => {};
+
+export default function LevelTestRunner({ language, questions }: { language: string; questions: PublicQuestion[] }) {
   const router = useRouter();
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [language, setLanguage] = useState("");
-  const [started, setStarted] = useState(false);
+  const total = questions.length;
+  const key = storageKey(language, total);
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+
+  const [stage, setStage] = useState<Stage>("intro");
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<number[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const languageQuestions = language ? (testData[language] || []) : [];
+  const answerList = answers ?? (hydrated ? loadAnswers(key, total) : new Array(total).fill(UNANSWERED));
+  const answeredCount = answerList.filter((answer) => answer >= 0).length;
+  const startedBefore = hydrated && answerList.some((answer) => answer !== UNANSWERED);
 
-  const handleStart = () => {
-    if (!language || languageQuestions.length === 0) {
-      alert("Lo sentimos, aún no hay preguntas configuradas para este idioma.");
-      return;
+  const choose = (value: number) => {
+    const next = [...answerList];
+    next[current] = value;
+    setAnswers(next);
+    setError(null);
+    try {
+      window.localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      // sin persistencia: el test sigue funcionando en memoria
     }
-    setAnswers(new Array(languageQuestions.length).fill(-1));
-    setStarted(true);
   };
 
-  if (!started) {
-    return (
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-neutral-100 mt-10">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-            📝
-          </div>
-          <h1 className="text-3xl font-black text-neutral-900 tracking-tight mb-4">
-            Test de Nivel Global
-          </h1>
-          <p className="text-neutral-500 mb-8 font-medium">
-            Selecciona el idioma que deseas evaluar. No hay límite de tiempo, pero intenta no usar traductores para que podamos evaluar tu nivel real.
-          </p>
-          
-          <div className="max-w-xs mx-auto mb-8 text-left space-y-2">
-            <label className="font-bold text-sm text-neutral-700">Idioma a evaluar:</label>
-            <select 
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:outline-none focus:border-primary shadow-sm"
-            >
-              <option value="" disabled>Selecciona un idioma...</option>
-              {IDIOMAS_OFERTADOS.map((lang) => (
-                <option key={lang} value={lang}>{lang}</option>
-              ))}
-            </select>
-          </div>
+  const goNext = () => {
+    if (answerList[current] === UNANSWERED) {
+      setError("Elige una respuesta o marca “No lo sé” para continuar.");
+      return;
+    }
+    setError(null);
+    if (current < total - 1) setCurrent(current + 1);
+    else setStage("review");
+  };
 
-          <button 
-            onClick={handleStart}
-            disabled={!language}
-            className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:transform-none"
+  const goBack = () => {
+    setError(null);
+    if (current > 0) setCurrent(current - 1);
+  };
+
+  // Atajos de teclado: el listener se registra una vez y siempre usa el handler más reciente
+  const keyHandler = useRef<(event: KeyboardEvent) => void>(() => {});
+  useEffect(() => {
+    keyHandler.current = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      // Enter sobre un botón enfocado: que actúe el propio botón
+      if (event.key === "Enter" && (event.target as HTMLElement | null)?.closest("button")) return;
+      const options = questions[current].options.length;
+      const digit = Number(event.key);
+      const letter = LETTERS.indexOf(event.key.toUpperCase());
+      if (digit >= 1 && digit <= options) choose(digit - 1);
+      else if (letter >= 0 && letter < options) choose(letter);
+      else if (event.key === "Enter" || event.key === "ArrowRight") goNext();
+      else if (event.key === "ArrowLeft") goBack();
+      else return;
+      event.preventDefault();
+    };
+  });
+
+  useEffect(() => {
+    if (stage !== "question") return;
+    const onKey = (event: KeyboardEvent) => keyHandler.current(event);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stage]);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError(null);
+    const payload = answerList.map((answer) => (answer >= 0 ? answer : UNANSWERED));
+    const result = await submitLevelTest(language, payload);
+    if (!result.ok) {
+      setError(result.error);
+      setSubmitting(false);
+      return;
+    }
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // nada que limpiar
+    }
+    router.replace("/dashboard?test_enviado=1");
+    router.refresh();
+  };
+
+  // ── Intro ──────────────────────────────────────────────
+  if (stage === "intro") {
+    return (
+      <Card className="mx-auto max-w-2xl p-8 text-center sm:p-12 animate-fade-up">
+        <Flag language={language} className="mx-auto size-16" />
+        <p className="mt-6 text-xs font-bold tracking-[0.2em] text-secondary uppercase">Test de nivel</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-900 sm:text-4xl">{language}</h1>
+        <p className="mx-auto mt-4 max-w-md text-neutral-500">
+          {total} preguntas tipo test, sin límite de tiempo. Responde sin traductores; si no sabes una respuesta, marca
+          “No lo sé”.
+        </p>
+        <ul className="mx-auto mt-8 max-w-sm space-y-2 text-left text-sm text-neutral-600">
+          <li className="flex gap-2">
+            <Check size={18} className="shrink-0 text-success" aria-hidden="true" />
+            Tu progreso se guarda en este dispositivo.
+          </li>
+          <li className="flex gap-2">
+            <Check size={18} className="shrink-0 text-success" aria-hidden="true" />
+            Puedes usar el teclado: 1–{Math.min(6, Math.max(...questions.map((q) => q.options.length)))} para elegir, Enter para avanzar.
+          </li>
+          <li className="flex gap-2">
+            <Check size={18} className="shrink-0 text-success" aria-hidden="true" />
+            Un profesor revisará tus respuestas y te comunicará tu nivel.
+          </li>
+        </ul>
+        <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <ButtonLink href="/dashboard/level-test" variant="outline" size="lg">
+            Cambiar idioma
+          </ButtonLink>
+          <Button
+            size="lg"
+            variant="secondary"
+            disabled={!hydrated}
+            onClick={() => {
+              // Retoma en la primera pregunta pendiente
+              const firstOpen = answerList.indexOf(UNANSWERED);
+              setAnswers(answerList);
+              setCurrent(firstOpen === -1 ? total - 1 : firstOpen);
+              setStage("question");
+            }}
           >
-            Comenzar Prueba
-          </button>
+            {startedBefore ? `Continuar (${answeredCount}/${total})` : "Empezar test"}
+            <ArrowRight size={18} aria-hidden="true" />
+          </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
-  const q = languageQuestions[currentQuestion];
-  const isLast = currentQuestion === languageQuestions.length - 1;
+  // ── Revisión ───────────────────────────────────────────
+  if (stage === "review") {
+    const skipped = total - answeredCount;
+    return (
+      <Card className="mx-auto max-w-2xl p-8 sm:p-10 animate-fade-up">
+        <h1 className="text-2xl font-black tracking-tight text-neutral-900">Revisa antes de enviar</h1>
+        <p className="mt-2 text-neutral-500">
+          Has respondido {answeredCount} de {total} preguntas
+          {skipped > 0 ? ` (${skipped} marcadas como “No lo sé”)` : ""}. Pulsa un número para volver a esa pregunta.
+        </p>
+        <div className="mt-6 grid grid-cols-6 gap-2 sm:grid-cols-10">
+          {answerList.map((answer, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => {
+                setCurrent(index);
+                setStage("question");
+              }}
+              className={cn(
+                "grid aspect-square place-items-center rounded-xl text-sm font-bold transition hover:scale-105",
+                answer >= 0 ? "bg-primary text-white" : "bg-neutral-100 text-neutral-400"
+              )}
+              aria-label={`Pregunta ${index + 1}${answer >= 0 ? ", respondida" : ", sin responder"}`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+        {error && <Alert tone="error" className="mt-6">{error}</Alert>}
+        <div className="mt-8 flex flex-col-reverse gap-3 border-t border-neutral-100 pt-6 sm:flex-row sm:justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setCurrent(total - 1);
+              setStage("question");
+            }}
+            disabled={submitting}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Volver
+          </Button>
+          <Button variant="secondary" size="lg" onClick={handleSubmit} isLoading={submitting} loadingText="Enviando…">
+            <Send size={18} aria-hidden="true" />
+            Enviar test
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
-  const handleSelect = (idx: number) => {
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = idx;
-    setAnswers(newAnswers);
-  };
-
-  const handleNext = () => {
-    if (answers[currentQuestion] === -1) {
-      setError("Por favor, selecciona una respuesta antes de continuar.");
-      return;
-    }
-    setError("");
-    if (!isLast) {
-      setCurrentQuestion(curr => curr + 1);
-    } else {
-      submitTest();
-    }
-  };
-
-  const submitTest = async () => {
-    setSubmitting(true);
-    let score = 0;
-    
-    // Calcular score localmente
-    answers.forEach((ans, idx) => {
-      if (ans === languageQuestions[idx].answer) {
-        score++;
-      }
-    });
-
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user) {
-      await supabase.from("level_tests").insert({
-        user_id: user.id,
-        language,
-        score,
-        max_score: languageQuestions.length,
-        answers: answers
-      });
-      router.push("/dashboard?test_completed=true");
-    }
-  };
-
-  const progress = ((currentQuestion + 1) / languageQuestions.length) * 100;
+  // ── Pregunta ───────────────────────────────────────────
+  const question = questions[current];
+  const selected = answerList[current];
+  const progress = ((current + 1) / total) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto mt-10">
-      <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-neutral-100 relative overflow-hidden">
-        {submitting && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
-            <RefreshCcw className="w-10 h-10 text-primary animate-spin mb-4" />
-            <h2 className="text-xl font-bold text-neutral-900">Enviando resultados...</h2>
-          </div>
-        )}
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6 flex items-center justify-between gap-4 text-sm font-bold text-neutral-500">
+        <span className="flex items-center gap-2">
+          <Flag language={language} className="size-6 ring-1" />
+          Pregunta {current + 1} de {total}
+        </span>
+        <span>{answeredCount} respondidas</span>
+      </div>
+      <div
+        className="mb-8 h-2 overflow-hidden rounded-full bg-neutral-200/70"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-valuenow={current + 1}
+        aria-label="Progreso del test"
+      >
+        <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500" style={{ width: `${progress}%` }} />
+      </div>
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center text-sm font-bold text-neutral-400 mb-4">
-            <span>Pregunta {currentQuestion + 1} de {languageQuestions.length}</span>
-            <span>{Math.round(progress)}% Completado</span>
-          </div>
-          <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
+      <Card key={current} className="p-6 sm:p-10 animate-fade-up">
+        <h1 className="text-2xl leading-snug font-black tracking-tight text-neutral-900 sm:text-3xl">{question.q}</h1>
 
-        <h2 className="text-2xl font-black text-neutral-900 mb-8 leading-relaxed">
-          {q.q}
-        </h2>
-
-        {error && (
-          <div className="mb-6 p-4 bg-error/10 text-error text-sm font-bold rounded-xl flex items-center gap-2">
-            <AlertCircle size={18} />
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-4 mb-10">
-          {q.options.map((opt: string, idx: number) => {
-            const isSelected = answers[currentQuestion] === idx;
+        <div role="radiogroup" aria-label="Opciones de respuesta" className="mt-8 space-y-3">
+          {question.options.map((option, index) => {
+            const isSelected = selected === index;
             return (
               <button
-                key={idx}
-                onClick={() => handleSelect(idx)}
-                className={`w-full text-left p-5 rounded-2xl border-2 transition-all font-medium text-lg flex items-center justify-between group ${
-                  isSelected 
-                    ? "border-primary bg-primary/5 text-primary shadow-sm" 
-                    : "border-neutral-200 text-neutral-600 hover:border-primary/50 hover:bg-neutral-50"
-                }`}
+                key={index}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                onClick={() => choose(index)}
+                className={cn(
+                  "group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left text-base font-semibold transition duration-200 sm:text-lg",
+                  isSelected
+                    ? "border-primary bg-primary-50 text-primary shadow-[0_0_0_4px_rgb(36_59_120/0.08)]"
+                    : "border-neutral-200 text-neutral-700 hover:border-primary/40 hover:bg-neutral-50"
+                )}
               >
-                <span>{opt}</span>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  isSelected ? "border-primary bg-primary text-white" : "border-neutral-300 group-hover:border-primary/50"
-                }`}>
-                  {isSelected && <Check size={14} strokeWidth={3} />}
-                </div>
+                <span
+                  className={cn(
+                    "grid size-9 shrink-0 place-items-center rounded-xl text-sm font-black transition",
+                    isSelected ? "bg-primary text-white" : "bg-neutral-100 text-neutral-500 group-hover:bg-primary/10"
+                  )}
+                >
+                  {LETTERS[index]}
+                </span>
+                <span className="flex-1">{option}</span>
+                {isSelected && <Check size={20} strokeWidth={3} aria-hidden="true" />}
               </button>
             );
           })}
+
+          <button
+            type="button"
+            role="radio"
+            aria-checked={selected === SKIPPED}
+            onClick={() => choose(SKIPPED)}
+            className={cn(
+              "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-3 text-sm font-bold transition",
+              selected === SKIPPED
+                ? "border-neutral-400 bg-neutral-100 text-neutral-700"
+                : "border-neutral-200 text-neutral-400 hover:border-neutral-300 hover:text-neutral-600"
+            )}
+          >
+            <HelpCircle size={16} aria-hidden="true" />
+            No lo sé
+          </button>
         </div>
 
-        <div className="flex justify-between items-center pt-6 border-t border-neutral-100">
-          <button 
-            onClick={() => {
-              if (currentQuestion > 0) setCurrentQuestion(curr => curr - 1);
-              setError("");
-            }}
-            disabled={currentQuestion === 0}
-            className="px-6 py-3 text-sm font-bold text-neutral-500 hover:text-neutral-900 disabled:opacity-0 transition-all"
-          >
+        {error && <Alert tone="warning" className="mt-6">{error}</Alert>}
+
+        <div className="mt-8 flex items-center justify-between gap-3 border-t border-neutral-100 pt-6">
+          <Button variant="ghost" onClick={goBack} disabled={current === 0}>
+            <ArrowLeft size={16} aria-hidden="true" />
             Atrás
-          </button>
-          
-          <button 
-            onClick={handleNext}
-            className="flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:-translate-y-0.5 transition-all"
-          >
-            {isLast ? "Finalizar y Enviar" : "Siguiente"}
-            {!isLast && <ChevronRight size={18} />}
-          </button>
+          </Button>
+          <Button size="lg" onClick={goNext}>
+            {current === total - 1 ? "Revisar y enviar" : "Siguiente"}
+            <ArrowRight size={18} aria-hidden="true" />
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
