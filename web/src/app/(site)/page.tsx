@@ -30,7 +30,13 @@ const structuredData = {
     addressRegion: "Andalucía",
     addressCountry: "ES",
   },
-  sameAs: [CONTACT.instagram],
+  sameAs: [CONTACT.instagram, CONTACT.facebook],
+  openingHoursSpecification: {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday"],
+    opens: "16:00",
+    closes: "20:30",
+  },
   knowsLanguage: ["en", "fr", "de", "it", "es"],
   description:
     "Academia de idiomas en Huelva y Centro Preparador Oficial Cambridge. Inglés, francés, alemán e italiano para todas las edades.",

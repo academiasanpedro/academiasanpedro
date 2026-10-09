@@ -22,15 +22,15 @@ const LANGUAGE_CARDS = [
   },
   {
     language: "Alemán",
-    tag: "Todos los niveles",
-    text: "De nivel inicial a avanzado con clases dinámicas y prácticas, en grupos homogéneos.",
-    exams: ["A1–C2"],
+    tag: "Extensivo o intensivo",
+    text: "Grupos homogéneos por nivel, conversación y preparación de exámenes oficiales.",
+    exams: ["Conversación", "Exámenes oficiales"],
   },
   {
     language: "Italiano",
-    tag: "Todos los niveles",
-    text: "Conversación, gramática y preparación de certificados oficiales a tu ritmo.",
-    exams: ["A1–C2"],
+    tag: "Extensivo o intensivo",
+    text: "Conversación, preparación de entrevistas y presentaciones, y certificados oficiales.",
+    exams: ["Conversación", "Exámenes oficiales"],
   },
 ];
 

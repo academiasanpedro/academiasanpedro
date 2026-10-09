@@ -8,7 +8,7 @@ import { LANGUAGES } from "@/lib/constants";
 
 const TRUST = [
   { value: "+90 %", label: "aprobados en Cambridge" },
-  { value: "+25 años", label: "de experiencia docente" },
+  { value: "+25 años", label: "de experiencia del profesorado" },
   { value: "4–65+", label: "años: todas las edades" },
 ];
 

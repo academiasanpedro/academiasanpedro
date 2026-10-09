@@ -1,7 +1,8 @@
 // Contacto — datos reales + formulario
 // Ref: AcademiaSanPedro/02_Business.md → Identidad
 
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import Facebook from "@/components/ui/FacebookIcon";
 import Instagram from "@/components/ui/InstagramIcon";
 import ContactForm from "@/components/features/ContactForm";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -9,9 +10,15 @@ import { CONTACT } from "@/lib/constants";
 
 const CHANNELS = [
   { icon: Phone, label: "Llámanos", value: CONTACT.phone, href: CONTACT.phoneHref },
+  { icon: MessageCircle, label: "WhatsApp", value: CONTACT.phone, href: CONTACT.whatsappHref, external: true },
+  { icon: Phone, label: "Teléfono fijo", value: CONTACT.landline, href: CONTACT.landlineHref },
   { icon: Mail, label: "Escríbenos", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
   { icon: MapPin, label: "Visítanos", value: `${CONTACT.address}, ${CONTACT.city}`, href: CONTACT.mapsUrl, external: true },
-  { icon: Instagram, label: "Síguenos", value: CONTACT.instagramHandle, href: CONTACT.instagram, external: true },
+];
+
+const SOCIAL = [
+  { icon: Instagram, label: CONTACT.instagramHandle, href: CONTACT.instagram },
+  { icon: Facebook, label: "Facebook", href: CONTACT.facebook },
 ];
 
 export default function Contact() {
@@ -44,6 +51,30 @@ export default function Contact() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-6 flex gap-4 rounded-2xl border border-primary/10 bg-primary-50 p-5">
+            <Clock size={20} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+            <div className="text-sm leading-relaxed text-neutral-600">
+              <p className="font-bold text-neutral-900">Horario de secretaría</p>
+              <p className="mt-1">{CONTACT.hours} (durante el curso escolar).</p>
+              <p className="mt-1">Fuera de ese horario, escríbenos por email o WhatsApp y te respondemos.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            {SOCIAL.map(({ icon: Icon, label, href }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition hover:text-primary"
+              >
+                <Icon size={16} aria-hidden="true" />
+                {label}
+              </a>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-[2rem] border border-neutral-200/70 bg-white p-6 shadow-soft sm:p-10">

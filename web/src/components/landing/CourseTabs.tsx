@@ -31,9 +31,10 @@ const AUDIENCES = [
     label: "Profesionales",
     icon: Briefcase,
     courses: [
-      { title: "Inglés profesional", meta: "A medida", text: "Formación específica de inglés para tu entorno laboral." },
-      { title: "Entrevistas de trabajo", meta: "Preparación", text: "Practica las preguntas clave y presenta tu perfil con confianza." },
-      { title: "Clases one-to-one", meta: "Individual", text: "Horario flexible y contenidos 100 % adaptados a tu objetivo." },
+      { title: "Inglés profesional", meta: "Comercio internacional", text: "Redacción profesional y correspondencia comercial en inglés, en formato extensivo o intensivo." },
+      { title: "Presentaciones y conferencias", meta: "Hablar en público", text: "Prepara la presentación de proyectos, charlas, conferencias y seminarios en inglés." },
+      { title: "Inglés para docentes", meta: "Profesorado", text: "Formación específica de inglés para profesores." },
+      { title: "Clases one-to-one", meta: "Individual", text: "Conversación, preparación de entrevistas de trabajo o el objetivo que necesites, 100 % adaptado a ti." },
     ],
   },
   {
@@ -41,7 +42,8 @@ const AUDIENCES = [
     label: "Exámenes oficiales",
     icon: GraduationCap,
     courses: [
-      { title: "Cambridge English", meta: "B1 · B2 · C1 · C2", text: "Centro Preparador Oficial: Preliminary, First, Advanced y Proficiency." },
+      { title: "Cambridge English", meta: "B1 · B2 · C1 · C2", text: "Centro Preparador Oficial: Preliminary, First, Advanced y Proficiency, en curso extensivo (9 meses) o intensivo (3 meses)." },
+      { title: "Business Preliminary", meta: "Cambridge · Negocios", text: "Preparación del certificado Cambridge de inglés para el trabajo (BEC)." },
       { title: "DELF y DALF", meta: "Francés", text: "Preparación de los diplomas oficiales de francés." },
       { title: "Otros certificados", meta: "Alemán · Italiano", text: "Te orientamos sobre el examen oficial que necesitas y te preparamos." },
     ],
@@ -108,7 +110,7 @@ export default function CourseTabs() {
         id={`panel-${current.id}`}
         role="tabpanel"
         aria-labelledby={`tab-${current.id}`}
-        className={cn("mx-auto mt-10 grid gap-5", current.courses.length === 2 ? "max-w-4xl md:grid-cols-2" : "md:grid-cols-3")}
+        className={cn("mx-auto mt-10 grid gap-5", current.courses.length % 2 === 0 ? "max-w-4xl md:grid-cols-2" : "md:grid-cols-3")}
       >
         {current.courses.map((course, index) => (
           <article

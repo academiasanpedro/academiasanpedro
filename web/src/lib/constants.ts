@@ -19,11 +19,16 @@ export const CONTACT = {
   city: "Huelva",
   phone: "610 93 25 78",
   phoneHref: "tel:+34610932578",
+  landline: "959 83 15 96",
+  landlineHref: "tel:+34959831596",
+  /** WhatsApp del móvil (la academia ofrece contacto por WhatsApp fuera de horario). */
+  whatsappHref: "https://wa.me/34610932578",
   email: "sanpedroidiomas@gmail.com",
   instagram: "https://www.instagram.com/sanpedroidiomas/",
   instagramHandle: "@sanpedroidiomas",
-  /** Pendiente: URL de la página de Facebook (ver 06_Backlog). */
-  facebook: null as string | null,
+  facebook: "https://www.facebook.com/AcademiaSanPedroIdiomas/",
+  /** Atención de secretaría durante el curso escolar. */
+  hours: "Lunes a jueves, de 16:00 a 20:30",
   mapsUrl:
     "https://www.google.com/maps/search/?api=1&query=Plaza+San+Pedro+2,+21004+Huelva",
 } as const;
